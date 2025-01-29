@@ -197,8 +197,8 @@ const EmployeeDashboard = () => {
 
   const totalEmployees = employees.length;
   const employeesByDepartment = employees.reduce((acc, employee) => {
-    if (employee.department_name) {
-      acc[employee.department_name] = (acc[employee.department_name] || 0) + 1;
+    if (employee.role_name) {
+      acc[employee.role_name] = (acc[employee.role_name] || 0) + 1;
     }
     return acc;
   }, {});
