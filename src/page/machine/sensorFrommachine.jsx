@@ -86,9 +86,6 @@ const SensorForm = () => {
 
  
 
-  
-
-
   return (
     <div className="flex w-full min-h-screen bg-gray-50">
       <Sidebar />
@@ -206,7 +203,7 @@ const SensorForm = () => {
                       backgroundColor: "#f8fafc",
                     },
                   }}
-                  //onClick={(e) => navigate("/machine/dashboard")}
+                  onClick={(e) => navigate("/machine/dashboard")}
                 >
                   กลับ
                 </Button>
@@ -224,6 +221,7 @@ const SensorForm = () => {
                           backgroundColor: "#1d4ed8",
                         },
                       }}
+          
                     >
                       บันทึก
                     </Button>

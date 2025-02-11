@@ -27,6 +27,8 @@ function App() {
         <Route path="/machine/edit/:id" element={<MachineForm />} />
         <Route path="/machine/view/:id" element={<MachineForm />} />
         <Route path="/machine/sensor/create/:id" element={<SensorForm />} />
+        <Route path="/machine/sensor/view/:machine_id/:id" element={<SensorForm />} />
+        <Route path="/machine/sensor/edit/:machine_id/:id" element={<SensorForm />} />
       </Routes>
     </Router>
   );
