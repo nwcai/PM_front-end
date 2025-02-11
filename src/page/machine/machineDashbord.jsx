@@ -35,7 +35,7 @@ import {
 import Sidebar from "../../component/sidebar";
 
 import { FaEye } from "react-icons/fa";
-import { GetAllMachines } from "../../service/machine/machine_service";
+import { DeleteMachinesById, GetAllMachines } from "../../service/machine/machine_service";
 
 const MachineDashboard = () => {
   const navigate = useNavigate();
@@ -76,7 +76,7 @@ const MachineDashboard = () => {
 
   const handleDeleteMachine = async () => {
     try {
-      await DeleteMachine(selectedMachine.id);
+      await DeleteMachinesById(selectedMachine.id);
       handleGetAllMachines();
       handleCloseDeleteDialog();
     } catch (error) {
@@ -155,7 +155,7 @@ const MachineDashboard = () => {
                 <TableRow>
                   <TableCell>ID</TableCell>
                   <TableCell>Name</TableCell>
-                  <TableCell>Type</TableCell>
+                  <TableCell>Sensor</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell align="right">Actions</TableCell>
                 </TableRow>
@@ -163,10 +163,10 @@ const MachineDashboard = () => {
               <TableBody>
                 {paginatedMachines.map((machine) => (
                   <TableRow key={machine.id}>
-                    <TableCell>{machine.id}</TableCell>
+                    <TableCell>{machine.id_machine}</TableCell>
                     <TableCell>{machine.machine_name}</TableCell>
-                    <TableCell>{machine.machine_type}</TableCell>
-                    <TableCell>{machine.status}</TableCell>
+                    <TableCell>{machine.machine_type ||0}</TableCell>
+                    <TableCell>{machine.status_name}</TableCell>
                     <TableCell align="right">
                       <IconButton onClick={() => handleViewMachine(machine.id)}>
                         <FaEye />
