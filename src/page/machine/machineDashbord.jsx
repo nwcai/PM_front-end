@@ -35,7 +35,10 @@ import {
 import Sidebar from "../../component/sidebar";
 
 import { FaEye } from "react-icons/fa";
-import { DeleteMachinesById, GetAllMachines } from "../../service/machine/machine_service";
+import {
+  DeleteMachinesById,
+  GetAllMachines,
+} from "../../service/machine/machine_service";
 
 const MachineDashboard = () => {
   const navigate = useNavigate();
@@ -54,8 +57,8 @@ const MachineDashboard = () => {
   const handleGetAllMachines = async () => {
     setLoading(true);
     try {
-      const res = await GetAllMachines()
-      console.log(res)
+      const res = await GetAllMachines();
+      console.log(res);
       setMachines(res);
     } catch (error) {
       console.error("handleGetAllMachines", error);
@@ -139,16 +142,16 @@ const MachineDashboard = () => {
               ),
             }}
           />
-
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={() => navigate("/machine/create")}
-          >
-            Add Machine
-          </Button>
-
+          <div className="flex justify-end mt-4">
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={() => navigate("/machine/create")}
+            >
+              Add Machine
+            </Button>
+          </div>
           <TableContainer component={Paper} className="mt-4">
             <Table>
               <TableHead>
@@ -165,7 +168,7 @@ const MachineDashboard = () => {
                   <TableRow key={machine.id}>
                     <TableCell>{machine.id_machine}</TableCell>
                     <TableCell>{machine.machine_name}</TableCell>
-                    <TableCell>{machine.machine_type ||0}</TableCell>
+                    <TableCell>{machine.machine_type || 0}</TableCell>
                     <TableCell>{machine.status_name}</TableCell>
                     <TableCell align="right">
                       <IconButton onClick={() => handleViewMachine(machine.id)}>
@@ -174,7 +177,9 @@ const MachineDashboard = () => {
                       <IconButton onClick={() => handleEditMachine(machine.id)}>
                         <EditIcon />
                       </IconButton>
-                      <IconButton onClick={() => handleOpenDeleteDialog(machine)}>
+                      <IconButton
+                        onClick={() => handleOpenDeleteDialog(machine)}
+                      >
                         <DeleteIcon />
                       </IconButton>
                     </TableCell>
@@ -197,12 +202,17 @@ const MachineDashboard = () => {
             <DialogTitle>Confirm Delete</DialogTitle>
             <DialogContent>
               <DialogContentText>
-                Are you sure you want to delete machine "{selectedMachine?.machine_name}"?
+                Are you sure you want to delete machine "
+                {selectedMachine?.machine_name}"?
               </DialogContentText>
             </DialogContent>
             <DialogActions>
               <Button onClick={handleCloseDeleteDialog}>Cancel</Button>
-              <Button onClick={handleDeleteMachine} color="error" variant="contained">
+              <Button
+                onClick={handleDeleteMachine}
+                color="error"
+                variant="contained"
+              >
                 Delete
               </Button>
             </DialogActions>

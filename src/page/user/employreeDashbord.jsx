@@ -34,8 +34,9 @@ import {
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 import Sidebar from "../../component/sidebar";
-import { GetAllUser} from "../../service/user/user_service";
+import { GetAllUser } from "../../service/user/user_service";
 import { FaEye } from "react-icons/fa";
+import cookies from "js-cookie";
 
 // Status Badge Component
 const StatusBadge = ({ status }) => {
@@ -98,6 +99,8 @@ const StatusBadge = ({ status }) => {
 
 const EmployeeDashboard = () => {
   const navigate = useNavigate();
+  const role = cookies.get("role_id");
+  const token = cookies.get("token");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [employees, setEmployee] = useState([]);
@@ -108,6 +111,10 @@ const EmployeeDashboard = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   useEffect(() => {
+    if(!token){
+      navigate("/login");
+      return;
+    }
     handleGetAllUsers();
   }, []);
 
@@ -168,7 +175,8 @@ const EmployeeDashboard = () => {
 
     const matchesSearch = searchFields.some(
       (field) =>
-        field && field.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        field &&
+        field.toString().toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const matchesDepartment =
@@ -205,7 +213,7 @@ const EmployeeDashboard = () => {
 
   const departmentColors = {
     Admin: "#4f46e5",
-    Common: "#ea580c"
+    Common: "#ea580c",
   };
 
   const handleRefresh = () => {
@@ -316,15 +324,17 @@ const EmployeeDashboard = () => {
                   Refresh
                 </Button>
 
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AddIcon />}
-                  className="bg-blue-600 hover:bg-blue-700"
-                  onClick={() => navigate("/employee/create")}
-                >
-                  Add Employee
-                </Button>
+               { role == 1 && (
+                 <Button
+                 variant="contained"
+                 color="primary"
+                 startIcon={<AddIcon />}
+                 className="bg-blue-600 hover:bg-blue-700"
+                 onClick={() => navigate("/employee/create")}
+               >
+                 Add Employee
+               </Button>
+               )}
               </div>
             </CardContent>
           </Card>
@@ -350,7 +360,9 @@ const EmployeeDashboard = () => {
                       hover
                       className="transition-colors duration-200"
                     >
-                      <TableCell className="font-medium">{employee.user_id}</TableCell>
+                      <TableCell className="font-medium">
+                        {employee.user_id}
+                      </TableCell>
                       <TableCell>{`${employee.first_name} ${employee.last_name}`}</TableCell>
                       <TableCell>{employee.role_name}</TableCell>
                       <TableCell>
@@ -373,22 +385,26 @@ const EmployeeDashboard = () => {
                         >
                           <FaEye />
                         </IconButton>
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          className="hover:bg-blue-50"
-                          onClick={() => handleEditEmployee(employee.id)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          className="hover:bg-red-50"
-                          onClick={() => handleOpenDeleteDialog(employee)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
+                        {role == 1 && (
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            className="hover:bg-blue-50"
+                            onClick={() => handleEditEmployee(employee.id)}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                        )}
+                        {role == 1 && (
+                          <IconButton
+                            size="small"
+                            color="error"
+                            className="hover:bg-red-50"
+                            onClick={() => handleOpenDeleteDialog(employee)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -414,7 +430,9 @@ const EmployeeDashboard = () => {
             aria-labelledby="alert-dialog-title"
             aria-describedby="alert-dialog-description"
           >
-            <DialogTitle id="alert-dialog-title">{"Confirm Delete"}</DialogTitle>
+            <DialogTitle id="alert-dialog-title">
+              {"Confirm Delete"}
+            </DialogTitle>
             <DialogContent>
               <DialogContentText id="alert-dialog-description">
                 Are you sure you want to delete employee{" "}

@@ -74,3 +74,14 @@ export const DeleteMachinesById = async (Id) => {
     throw e; // Re-throw the original error
   }
 };
+
+export const GetAllNameMechines = async ()=>{
+  try {
+    const response = await axios.get(`${BASE_URL}/api/machine/allname`);
+    //console.log("machine List:", response.data);
+    return response.data;
+  } catch (e) {
+    console.error("Error fetching users from API:", e);
+    throw e; // Re-throw the original error
+  }
+}

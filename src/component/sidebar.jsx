@@ -20,8 +20,6 @@ const Sidebar = () => {
     { title: 'หน้าหลัก', icon: <Home className="w-5 h-5" /> , path : '/' },
     { title: 'ผู้ใช้งาน', icon: <Users className="w-5 h-5" /> , path : '/employee/dashboard' },
     { title: 'เครื่องจักร', icon: <LiaIndustrySolid className="w-5 h-5" /> , path : '/machine/dashboard' },
-    { title: 'ตั้งค่า', icon: <Settings className="w-5 h-5" /> },
-    { title: 'ช่วยเหลือ', icon: <HelpCircle className="w-5 h-5" /> }
   ];
 
   return (

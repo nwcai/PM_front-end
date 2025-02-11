@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, useParams, data } from "react-router-dom";
+import { useNavigate, useLocation, useParams,} from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -34,6 +34,7 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 
 import { TbPhotoSensor3 } from "react-icons/tb";
+import { DeleteSensor, GetAllSensorByIdMachine } from "../../service/sensor/sensor_service";
 
 // Custom styled components
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -61,6 +62,7 @@ const MachineForm = () => {
     detail: "",
     note: "",
   });
+  const [sensorData, setSensorData] = useState([]); // New state for sensor data
 
   useEffect(() => {
     if (location.pathname.includes("edit")) {
@@ -77,78 +79,98 @@ const MachineForm = () => {
     }
   }, []);
 
-const columns = [
-  {
-    field: "id",
-    headerName: "SERIAL_ID",
-    flex: 1,
-    align: "center",
-    headerAlign: "center",
-  },
-  {
-    field: "firstName",
-    headerName: "ชื่อ",
-    flex: 1,
-    editable: true,
-    align: "center",
-    headerAlign: "center",
-  },
-  {
-    field: "age",
-    headerName: "จำนวน",
-    type: "number",
-    flex: 1,
-    editable: true,
-    align: "center",
-    headerAlign: "center",
-  },
-  {
-    field: "actions",
-    headerName: "Actions",
-    flex: 1,
-    sortable: false,
-    headerAlign: "center",
-    renderCell: (params) => {
-      const navigate = useNavigate(); // กำหนด navigate
-
-      const handleViewClick = () => {
-        navigate(`/machine/sensor/view/${params.row.machine_id}/${params.row.id}`); // เปลี่ยนเป็นเส้นทางที่ต้องการเมื่อคลิกดู
-      };
-
-      const handleEditClick = () => {
-        navigate(`/machine/sensor/edit/${params.row.machine_id}/${params.row.id}`); // เปลี่ยนเป็นเส้นทางที่ต้องการเมื่อคลิกแก้ไข
-      };
-
-      const handleDeleteClick = () => {
-        // ลบข้อมูล (คุณสามารถใส่ฟังก์ชันลบที่ต้องการได้)
-        console.log(`Delete item with id: ${params.row.id}`);
-      };
-
-      return (
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "center", // จัดให้อยู่ตรงกลาง
-          }}
-        >
-          <IconButton size="small" color="primary" className="hover:bg-blue-50" onClick={handleViewClick}>
-            <FaEye />
-          </IconButton>
-          <IconButton size="small" color="primary" className="hover:bg-blue-50" onClick={handleEditClick}>
-            <EditIcon />
-          </IconButton>
-          <IconButton size="small" color="error" className="hover:bg-red-50" onClick={handleDeleteClick}>
-            <DeleteIcon />
-          </IconButton>
-        </Stack>
-      );
+  const columns = [
+    {
+      field: "serial_number",
+      headerName: "SERIAL_ID",
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
     },
-  },
-];
+    {
+      field: "name",
+      headerName: "ชื่อ",
+      flex: 1,
+      editable: true,
+      align: "center",
+      headerAlign: "center",
+    },
+    {
+      field: "status_name",
+      headerName: "สถานะ",
+      flex: 1,
+      editable: true,
+      align: "center",
+      headerAlign: "center",
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      flex: 1,
+      sortable: false,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => {
+        const navigate = useNavigate(); // กำหนด navigate
 
+        const handleViewClick = () => {
+          navigate(
+            `/machine/sensor/view/${params.row.id_machine}/${params.row.id}`
+          ); // เปลี่ยนเป็นเส้นทางที่ต้องการเมื่อคลิกดู
+        };
+
+        const handleEditClick = () => {
+          navigate(
+            `/machine/sensor/edit/${params.row.id_machine}/${params.row.id}`
+          ); // เปลี่ยนเป็นเส้นทางที่ต้องการเมื่อคลิกแก้ไข
+        };
+
+        const handleDeleteClick = async () => {
+          // ลบข้อมูล (คุณสามารถใส่ฟังก์ชันลบที่ต้องการได้)
+          console.log(`Delete item with id: ${params.row.id}`);
+          await handleDeleteSensor(params.row.id)
+          await handleGetSensorData(params.row.id_machine)
+        };
+
+        return (
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center", // จัดให้อยู่ตรงกลาง
+            }}
+          >
+            <IconButton
+              size="small"
+              color="primary"
+              className="hover:bg-blue-50"
+              onClick={handleViewClick}
+            >
+              <FaEye />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="primary"
+              className="hover:bg-blue-50"
+              onClick={handleEditClick}
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="error"
+              className="hover:bg-red-50"
+              onClick={handleDeleteClick}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Stack>
+        );
+      },
+    },
+  ];
 
   const handleView = (row) => {
     console.log("Viewing:", row);
@@ -166,25 +188,8 @@ const columns = [
   };
 
   const rows = [
-    { id: 1, lastName: "Snow", firstName: "Jon", age: 14, machine_id : 1 },
-    { id: 2, lastName: "Lannister", firstName: "Cersei", age: 31,machine_id : 1 },
-    { id: 3, lastName: "Lannister", firstName: "Jaime", age: 31,machine_id : 1 },
-    { id: 4, lastName: "Stark", firstName: "Arya", age: 11 ,machine_id : 1},
-    { id: 5, lastName: "Targaryen", firstName: "Daenerys", age: 1 , machine_id : 1 },
-    { id: 6, lastName: "Melisandre", firstName: null, age: 150 , machine_id : 1},
-    { id: 7, lastName: "Clifford", firstName: "Ferrara", age: 44 ,machine_id : 1},
-    { id: 8, lastName: "Frances", firstName: "Rossini", age: 36 ,machine_id : 1},
-    { id: 9, lastName: "Roxie", firstName: "Harvey", age: 65 ,machine_id : 1 },
+    { id: 1, lastName: "Snow", firstName: "Jon", age: 14, machine_id: 1 },
   ];
-
-  const handleGetMachineById = async () => {
-    try {
-      const res = await GetMachineById(id);
-      setMachineInfo(res[0]);
-    } catch (error) {
-      console.error("Error getting machine by ID:", error);
-    }
-  };
 
   const handleMachineInfoChange = (field) => (event) => {
     setMachineInfo((prev) => ({
@@ -216,16 +221,6 @@ const columns = [
     }
   };
 
-  const handleGetMachinesById = async () => {
-    try {
-      const res = await GetMachinesById(id);
-      setMachineInfo(res);
-    } catch (error) {
-      console.error("Error get machine:", error);
-      AlertError();
-    }
-  };
-
   const handleUpdateMachine = async (data) => {
     try {
       const res = await UpdateMachine(data, id);
@@ -233,6 +228,58 @@ const columns = [
       navigate("/machine/dashboard");
     } catch (error) {
       console.error("Error creating machine:", error);
+      AlertError();
+    }
+  };
+
+  const handleGetSensorData = async (machineId) => {
+    try {
+      const response = await GetAllSensorByIdMachine(machineId);
+      if (response && Array.isArray(response)) {
+        // Ensure each row has a unique id field required by DataGrid
+        const formattedData = response.map((sensor, index) => ({
+          ...sensor,
+          id: sensor.id || index + 1, // Use sensor.id if available, otherwise use index
+        }));
+        setSensorData(formattedData);
+      } else {
+        console.error("Invalid sensor data format:", response);
+        setSensorData([]);
+      }
+    } catch (error) {
+      console.error("Error fetching sensor data:", error);
+      AlertError();
+      setSensorData([]);
+    }
+  };
+
+  const handleDeleteSensor = async (id) => {
+    try {
+      const res = await DeleteSensor(id)
+    } catch (error) {
+      console.error("Error deleting sensor data:", error);
+      AlertError();
+    }
+  };
+
+  const handleGetMachinesById = async () => {
+    try {
+      if (!id) {
+        console.error("Invalid machine ID");
+        return;
+      }
+
+      const res = await GetMachinesById(id);
+
+      if (!res || !res.id_machine) {
+        console.error("Invalid machine response", res);
+        return;
+      }
+
+      setMachineInfo(res);
+      await handleGetSensorData(res.id_machine);
+    } catch (error) {
+      console.error("Error getting machine:", error);
       AlertError();
     }
   };
@@ -363,7 +410,7 @@ const columns = [
                         backgroundColor: "#FD6A02",
                       },
                     }}
-                    onClick={(e) => navigate("/machine/sensor/create/" + id)}
+                    onClick={(e) => navigate("/machine/sensor/create/" + machineInfo.id_machine)}
                   >
                     เพิ่มเซนเซอร์
                   </Button>
@@ -389,7 +436,7 @@ const columns = [
             </form>
           </CardContent>
         </StyledCard>
-        {createState && (
+        {!createState && (
           <StyledCard sx={{ marginTop: 2 }}>
             <CardContent className="p-6">
               <Box className="flex justify-between items-center mb-6">
@@ -401,7 +448,13 @@ const columns = [
                 </Typography>
               </Box>
               <div style={{ height: 400, width: "100%" }}>
-                <DataGrid rows={rows} columns={columns} />
+                <DataGrid
+                  rows={sensorData}
+                  columns={columns}
+                  pageSize={5}
+                  rowsPerPageOptions={[5, 10, 20]}
+                  disableSelectionOnClick
+                />
               </div>
             </CardContent>
           </StyledCard>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation , useParams } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -10,14 +10,18 @@ import {
   Box,
   FormControl,
   MenuItem,
+  InputAdornment,
+  IconButton
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import Sidebar from "../../component/sidebar";
-import { CreateUser, GetUserById, UpdateUser } from "../../service/user/user_service";
+import {
+  CreateUser,
+  GetUserById,
+  UpdateUser,
+} from "../../service/user/user_service";
 import { AlertError, AlertSuccess } from "../../component/alert";
-
-
-
+import { Eye, EyeOff } from "lucide-react";
 // Custom styled components
 const StyledCard = styled(Card)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
@@ -36,10 +40,12 @@ const EmployeeForm = () => {
   const navigate = useNavigate();
   const path = useLocation();
   const { id } = useParams();
+  const [showPassword, setShowPassword] = useState(false);
   const [editState, setEditState] = useState(true);
   const [createState, setCreateState] = useState(true);
   const [employeeInfo, setEmployeeInfo] = useState({
     user_id: "",
+    password: "",
     first_name: "",
     last_name: "",
     role_name: "",
@@ -51,25 +57,25 @@ const EmployeeForm = () => {
     if (location.pathname.includes("edit")) {
       setEditState(true);
       setCreateState(false);
-      handleGetUserById()
+      handleGetUserById();
     } else if (location.pathname.includes("view")) {
       setEditState(false);
       setCreateState(false);
-      handleGetUserById()
+      handleGetUserById();
     } else if (location.pathname.includes("create")) {
       setEditState(true);
       setCreateState(true);
     }
   }, []);
 
-  const handleGetUserById = async () =>{
+  const handleGetUserById = async () => {
     try {
       const res = await GetUserById(id);
       setEmployeeInfo(res[0]);
     } catch (error) {
       console.error("Error getting user by ID:", error);
     }
-  }
+  };
 
   const handleEmployeeInfoChange = (field) => (event) => {
     const newValue = event.target.value;
@@ -81,7 +87,6 @@ const EmployeeForm = () => {
       };
 
       // Dynamically update department_id based on department name
-      
 
       if (field === "role_name") {
         const roleMapping = {
@@ -100,14 +105,12 @@ const EmployeeForm = () => {
     e.preventDefault();
     console.log("Form submitted:", employeeInfo);
     // await handleCreateUser();
-    if(createState){
+    if (createState) {
       await handleCreateUser();
-    }else{
+    } else {
       await handleUpdateUser();
     }
   };
-
-  
 
   const handleCreateUser = async () => {
     try {
@@ -122,9 +125,9 @@ const EmployeeForm = () => {
 
   const handleUpdateUser = async () => {
     try {
-      const data = employeeInfo
-      data.id = id
-      const res = await UpdateUser(data)
+      const data = employeeInfo;
+      data.id = id;
+      const res = await UpdateUser(data);
       AlertSuccess();
       navigate("/employee/dashboard");
     } catch (error) {
@@ -166,6 +169,38 @@ const EmployeeForm = () => {
                     disabled={!editState}
                   />
                 </FormControl>
+                { createState && (
+                  <FormControl fullWidth>
+                  <Typography
+                    variant="subtitle2"
+                    className="text-gray-700 mb-2"
+                  >
+                    รหัสผ่าน*
+                  </Typography>
+                  <StyledTextField
+                    required
+                    type={showPassword ? "text" : "password"}
+                    value={employeeInfo.password}
+                    onChange={handleEmployeeInfoChange("password")}
+                    placeholder="กรุณากรอกรหัสพนักงาน"
+                    size="small"
+                    className="bg-white"
+                    disabled={!editState}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowPassword(!showPassword)}
+                            edge="end"
+                          >
+                            {showPassword ? <EyeOff /> : <Eye />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </FormControl>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -277,10 +312,7 @@ const EmployeeForm = () => {
                     <MenuItem value="Common">Common</MenuItem>
                   </StyledTextField>
                 </FormControl>
-                
               </div>
-
-              
 
               <div className="flex justify-end space-x-4 pt-8">
                 <Button
