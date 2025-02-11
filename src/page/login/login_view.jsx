@@ -54,11 +54,11 @@ const AnimatedGridLogin = () => {
         
         <form className="space-y-6">
           <div>
-            <label className="block text-white text-sm font-medium mb-2">อีเมล</label>
+            <label className="block text-white text-sm font-medium mb-2">ชี่อผู้ใช้</label>
             <input
-              type="email"
+              type="text"
               className="w-full px-4 py-3 bg-white/5 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white"
-              placeholder="your@email.com"
+              placeholder="username"
             />
           </div>
           
@@ -97,10 +97,10 @@ const AnimatedGridLogin = () => {
           </button>
         </form>
         
-        <p className="mt-6 text-center text-white">
+        {/* <p className="mt-6 text-center text-white">
           ยังไม่มีบัญชี?{' '}
           <a href="#" className="text-blue-400 hover:text-blue-300">สมัครสมาชิก</a>
-        </p>
+        </p> */}
       </div>
     </div>
   );

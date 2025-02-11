@@ -6,6 +6,7 @@ import EmployeeForm from "./page/user/employeeForm_view";
 import EmployeeDashboard from "./page/user/employreeDashbord";
 import MachineDashboard from "./page/machine/machineDashbord";
 import MachineForm from "./page/machine/machineFrom_view";
+import SensorForm from "./page/machine/sensorFrommachine";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/machine/dashboard" element={<MachineDashboard />} />
         <Route path="/machine/edit/:id" element={<MachineForm />} />
         <Route path="/machine/view/:id" element={<MachineForm />} />
+        <Route path="/machine/sensor/create/:id" element={<SensorForm />} />
       </Routes>
     </Router>
   );
