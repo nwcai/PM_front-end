@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, useParams,} from "react-router-dom";
+import { useNavigate, useLocation, useParams, } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -34,7 +34,7 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 
 import { TbPhotoSensor3 } from "react-icons/tb";
-import { DeleteSensor, GetAllSensorByIdMachine } from "../../service/sensor/sensor_service";
+import { DeleteSensor, GetAllSensorByIdMachine, KorawitGetAllSensorByIdMachine } from "../../service/sensor/sensor_service";
 
 // Custom styled components
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -61,10 +61,12 @@ const MachineForm = () => {
     name: "",
     detail: "",
     note: "",
+    life_time: "",
   });
   const [sensorData, setSensorData] = useState([]); // New state for sensor data
 
   useEffect(() => {
+    KorawithandleGetSensorData()
     if (location.pathname.includes("edit")) {
       setEditState(true);
       setCreateState(false);
@@ -284,6 +286,23 @@ const MachineForm = () => {
     }
   };
 
+
+  //
+
+  const KorawithandleGetSensorData = async () => {
+    try {
+      const response = await KorawitGetAllSensorByIdMachine();
+      console.log(response);
+    } catch (error) {
+      console.error("Error fetching sensor data:", error);
+      AlertError();
+
+    }
+  };
+
+
+
+  //
   return (
     <div className="flex w-full min-h-screen bg-gray-50">
       <Sidebar />
@@ -381,6 +400,28 @@ const MachineForm = () => {
                 </FormControl>
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <FormControl fullWidth>
+                  <Typography
+                    variant="subtitle2"
+                    className="text-gray-700 mb-2"
+                  >
+                    อายุการใช้งาน
+                  </Typography>
+                  <StyledTextField
+                    value={machineInfo.life_time}
+                    onChange={handleMachineInfoChange("life_time")}
+                    placeholder="หน่วย(ปี)"
+                    size="small"
+                    className="bg-white"
+                    disabled={!editState}
+                    multiline
+                    //rows={2}
+                  />
+                </FormControl>
+              </div>
+
+
               <div className="flex justify-end space-x-4 pt-8">
                 <Button
                   variant="outlined"
@@ -399,7 +440,7 @@ const MachineForm = () => {
                   กลับ
                 </Button>
 
-                {editState && (
+                {location.pathname.includes("edit") && (
                   <Button
                     variant="contained"
                     startIcon={<TbPhotoSensor3 />}
@@ -462,6 +503,7 @@ const MachineForm = () => {
       </div>
     </div>
   );
+
 };
 
 export default MachineForm;

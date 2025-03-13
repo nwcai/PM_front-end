@@ -168,7 +168,7 @@ const MachineDashboard = () => {
                   <TableRow key={machine.id}>
                     <TableCell>{machine.id_machine}</TableCell>
                     <TableCell>{machine.machine_name}</TableCell>
-                    <TableCell>{machine.machine_type || 0}</TableCell>
+                    <TableCell>{machine.sensor_count || 0}</TableCell>
                     <TableCell>{machine.status_name}</TableCell>
                     <TableCell align="right">
                       <IconButton onClick={() => handleViewMachine(machine.id)}>

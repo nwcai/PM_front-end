@@ -17,7 +17,7 @@ const Sidebar = () => {
   const [isExpanded, setIsExpanded] = useState(true);
 
   const menuItems = [
-    { title: 'หน้าหลัก', icon: <Home className="w-5 h-5" /> , path : '/' },
+    //{ title: 'หน้าหลัก', icon: <Home className="w-5 h-5" /> , path : '/' },
     { title: 'ผู้ใช้งาน', icon: <Users className="w-5 h-5" /> , path : '/employee/dashboard' },
     { title: 'เครื่องจักร', icon: <LiaIndustrySolid className="w-5 h-5" /> , path : '/machine/dashboard' },
   ];

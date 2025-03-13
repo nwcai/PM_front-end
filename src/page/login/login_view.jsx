@@ -59,7 +59,7 @@ const AnimatedGridLogin = () => {
         Cookies.set('role_id', res.role_id, { expires: 7 });
 
         // Redirect to dashboard or another page
-        navigate("/"); 
+        navigate("/machine/dashboard"); 
       } else {
         console.error("Invalid response from server:", res);
         AlertError("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
@@ -129,7 +129,7 @@ const AnimatedGridLogin = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-sm">
+          {/* <div className="flex items-center justify-between text-sm">
             <label className="flex items-center text-white">
               <input type="checkbox" className="mr-2" />
               จดจำฉัน
@@ -137,7 +137,7 @@ const AnimatedGridLogin = () => {
             <a href="#" className="text-blue-400 hover:text-blue-300">
               ลืมรหัสผ่าน?
             </a>
-          </div>
+          </div> */}
 
           <button
             type="submit"

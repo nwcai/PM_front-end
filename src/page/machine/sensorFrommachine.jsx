@@ -51,6 +51,14 @@ const SensorForm = () => {
     name: "",
     detail: "",
     note: "",
+    warning_vibration_x: "",
+    warning_vibration_y: "",
+    warning_vibration_z: "",
+    warning_temp: "",
+    critical_vibration_x: "",
+    critical_vibration_y: "",
+    critical_vibration_z: "",
+    critical_temp: "",
   });
 
   useEffect(() => {
@@ -193,32 +201,7 @@ const SensorForm = () => {
                 </FormControl>
               </div>
 
-              {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <FormControl fullWidth>
-                  <Typography
-                    variant="subtitle2"
-                    className="text-gray-700 mb-2"
-                  >
-                    เครื่องจัก
-                  </Typography>
-                  <StyledTextField
-                    select
-                    required
-                    value={sensorInfo.name}
-                    onChange={handlesensorInfoChange("name")}
-                    placeholder="กรุณาเลือกชื่อเซ็นเซอร์"
-                    size="small"
-                    className="bg-white"
-                    disabled={!editState}
-                  >
-                    {options.map((option) => (
-                      <MenuItem key={option} value={option}>
-                        {option}
-                      </MenuItem>
-                    ))}
-                  </StyledTextField>
-                </FormControl>
-              </div> */}
+              
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormControl fullWidth>
@@ -258,6 +241,122 @@ const SensorForm = () => {
                     disabled={!editState}
                     multiline
                     rows={2}
+                  />
+                </FormControl>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <FormControl fullWidth>
+                  <Typography variant="subtitle2" className="text-gray-700 mb-2">
+                    Warning Vibration X
+                  </Typography>
+                  <StyledTextField
+                    value={sensorInfo.warning_vibration_x}
+                    onChange={handlesensorInfoChange("warning_vibration_x")}
+                    placeholder=""
+                    size="small"
+                    className="bg-white"
+                    disabled={!editState}
+                  />
+                </FormControl>
+                <FormControl fullWidth>
+                  <Typography variant="subtitle2" className="text-gray-700 mb-2">
+                    Critical Vibration X
+                  </Typography>
+                  <StyledTextField
+                    value={sensorInfo.critical_vibration_x}
+                    onChange={handlesensorInfoChange("critical_vibration_x")}
+                    placeholder=""
+                    size="small"
+                    className="bg-white"
+                    disabled={!editState}
+                  />
+                </FormControl>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <FormControl fullWidth>
+                  <Typography variant="subtitle2" className="text-gray-700 mb-2">
+                    Warning Vibration Y
+                  </Typography>
+                  <StyledTextField
+                    value={sensorInfo.warning_vibration_y}
+                    onChange={handlesensorInfoChange("warning_vibration_y")}
+                    placeholder=""
+                    size="small"
+                    className="bg-white"
+                    disabled={!editState}
+                  />
+                </FormControl>
+                <FormControl fullWidth>
+                  <Typography variant="subtitle2" className="text-gray-700 mb-2">
+                    Critical Vibration Y
+                  </Typography>
+                  <StyledTextField
+                    value={sensorInfo.critical_vibration_y}
+                    onChange={handlesensorInfoChange("critical_vibration_y")}
+                    placeholder=""
+                    size="small"
+                    className="bg-white"
+                    disabled={!editState}
+                  />
+                </FormControl>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <FormControl fullWidth>
+                  <Typography variant="subtitle2" className="text-gray-700 mb-2">
+                    Warning Vibration Z
+                  </Typography>
+                  <StyledTextField
+                    value={sensorInfo.warning_vibration_z}
+                    onChange={handlesensorInfoChange("warning_vibration_z")}
+                    placeholder=""
+                    size="small"
+                    className="bg-white"
+                    disabled={!editState}
+                  />
+                </FormControl>
+                <FormControl fullWidth>
+                  <Typography variant="subtitle2" className="text-gray-700 mb-2">
+                    Critical Vibration Z
+                  </Typography>
+                  <StyledTextField
+                    value={sensorInfo.critical_vibration_z}
+                    onChange={handlesensorInfoChange("critical_vibration_z")}
+                    placeholder=""
+                    size="small"
+                    className="bg-white"
+                    disabled={!editState}
+                  />
+                </FormControl>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <FormControl fullWidth>
+                  <Typography variant="subtitle2" className="text-gray-700 mb-2">
+                    Warning Temperature
+                  </Typography>
+                  <StyledTextField
+                    value={sensorInfo.warning_temp}
+                    onChange={handlesensorInfoChange("warning_temp")}
+                    placeholder=""
+                    size="small"
+                    className="bg-white"
+                    disabled={!editState}
+                  />
+                </FormControl>
+                <FormControl fullWidth>
+                  <Typography variant="subtitle2" className="text-gray-700 mb-2">
+                    Critical Temperature
+                  </Typography>
+                  <StyledTextField
+                    value={sensorInfo.critical_temp}
+                    onChange={handlesensorInfoChange("critical_temp")}
+                    placeholder=""
+                    size="small"
+                    className="bg-white"
+                    disabled={!editState}
                   />
                 </FormControl>
               </div>
