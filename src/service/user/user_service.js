@@ -64,3 +64,22 @@ export const CreateUser  = async (data) => {
       }
     }
   };
+
+  export const Login = async (data) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/api/user/login`, data,{
+        headers: {
+          "ngrok-skip-browser-warning": "true"
+        },
+      });
+      return response.data;
+    } catch (error) {
+      // Check if the error response has a 401 status code
+      if (error.response && error.response.status === 401) {
+        throw new Error('บัญชีนี้มึอยู่แล้ว'); // Duplicate data error message
+      } else {
+        console.error('Error UserRegister:', error);
+        throw new Error(error.message || 'An error occurred');
+      }
+    } 
+  }

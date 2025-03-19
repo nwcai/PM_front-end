@@ -10,15 +10,16 @@ import {
   LogOut
 } from 'lucide-react';
 
+import { LiaIndustrySolid } from "react-icons/lia";
+
 const Sidebar = () => {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(true);
 
   const menuItems = [
-    { title: 'หน้าหลัก', icon: <Home className="w-5 h-5" /> , path : '/' },
+    //{ title: 'หน้าหลัก', icon: <Home className="w-5 h-5" /> , path : '/' },
     { title: 'ผู้ใช้งาน', icon: <Users className="w-5 h-5" /> , path : '/employee/dashboard' },
-    { title: 'ตั้งค่า', icon: <Settings className="w-5 h-5" /> },
-    { title: 'ช่วยเหลือ', icon: <HelpCircle className="w-5 h-5" /> }
+    { title: 'เครื่องจักร', icon: <LiaIndustrySolid className="w-5 h-5" /> , path : '/machine/dashboard' },
   ];
 
   return (
@@ -75,7 +76,7 @@ const Sidebar = () => {
             hover:bg-gray-700
             transition-colors
             ${!isExpanded && 'justify-center'}
-          `}
+          `} onClick={()=>navigate("/login")}
         >
           <LogOut className="w-5 h-5" />
           {isExpanded && (
