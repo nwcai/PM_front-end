@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, useParams} from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -14,6 +14,8 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import Sidebar from "../../component/sidebar";
+import { Line } from "react-chartjs-2";
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
 
 import { AlertError, AlertSuccess } from "../../component/alert";
 import {
@@ -24,7 +26,10 @@ import {
 } from "../../service/machine/machine_service";
 
 import { TbPhotoSensor3 } from "react-icons/tb";
-import { CreateSensor, GetAllSensorById, UpdateSensor } from "../../service/sensor/sensor_service";
+import { CreateSensor, GetAllSensorById, UpdateSensor, GetSensorData } from "../../service/sensor/sensor_service";
+
+// Register chart.js components
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 // Custom styled components
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -42,15 +47,16 @@ const StyledTextField = styled(TextField)({
 
 const SensorForm = () => {
   const navigate = useNavigate();
-  const path = useLocation();
-  const { id , machine_id } = useParams();
+  const location = useLocation();
+  const { id, machine_id } = useParams();
   const [editState, setEditState] = useState(true);
   const [createState, setCreateState] = useState(true);
   const [sensorInfo, setsensorInfo] = useState({
-    serial_number: "",
+    id_sensor: "",
     name: "",
     detail: "",
     note: "",
+    severity: "",
     warning_vibration_x: "",
     warning_vibration_y: "",
     warning_vibration_z: "",
@@ -60,10 +66,11 @@ const SensorForm = () => {
     critical_vibration_z: "",
     critical_temp: "",
   });
+  const [chartData, setChartData] = useState(null);
 
   useEffect(() => {
     const fetchSensorData = async () => {
-      handleGetMechineName()
+      handleGetMechineName();
       try {
         if (location.pathname.includes("edit")) {
           setEditState(true);
@@ -83,7 +90,37 @@ const SensorForm = () => {
     };
 
     fetchSensorData();
-  }, [location.pathname]); // ✅ Added dependency
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const fetchChartData = async () => {
+      try {
+        console.log("Fetching chart data with id_sensor:", sensorInfo.id_sensor); // Log the id_sensor being used
+        const data = await GetSensorData(sensorInfo.id_sensor);
+        console.log("Fetched chart data:", data); // Log the fetched data
+
+        // Transform the data to include timestamps
+        if (Array.isArray(data) && data.length > 0) {
+          const transformedData = data.map((item) => ({
+            timestamp: item.create_date, // Use create_date as the timestamp
+            temp: item.temp, // Use temp as the value
+            vibration_x: item.vibration_x, // Use vibration_x as the value
+            vibration_y: item.vibration_y, // Use vibration_y as the value
+            vibration_z: item.vibration_z, // Use vibration_z as the value
+          }));
+          setChartData(transformedData);
+        } else {
+          console.error("Invalid data format:", data);
+        }
+      } catch (error) {
+        console.error("Error fetching chart data:", error);
+      }
+    };
+
+    if (sensorInfo.id_sensor) {
+      fetchChartData();
+    }
+  }, [sensorInfo.id_sensor]);
 
   const handlesensorInfoChange = (field) => (event) => {
     setsensorInfo((prev) => ({
@@ -96,7 +133,7 @@ const SensorForm = () => {
     e.preventDefault();
     if (createState) {
       let data = sensorInfo;
-      data.id_machine = id
+      data.id_machine = id;
       console.log("handle submit", data);
       await handleCreateSensor();
     } else {
@@ -117,16 +154,15 @@ const SensorForm = () => {
   const handleGetMechineName = async (e) => {
     try {
       const res = await GetAllNameMechines();
-      console.log("data",res)
-      
+      console.log("data", res);
     } catch (error) {
       console.error("handleGetMechineName", error);
     }
-  }; 
+  };
 
   const handleCreateSensor = async () => {
     try {
-      const res = await CreateSensor(sensorInfo);;
+      const res = await CreateSensor(sensorInfo);
       AlertSuccess();
       navigate(-1);
     } catch (error) {
@@ -146,6 +182,135 @@ const SensorForm = () => {
     }
   };
 
+  const tempData = {
+    labels: chartData ? chartData.map((item) => new Date(item.timestamp).toLocaleString()) : [],
+    datasets: [
+      {
+        label: "Temperature",
+        data: chartData ? chartData.map((item) => item.temp) : [],
+        fill: false,
+        backgroundColor: "rgb(75, 192, 192)",
+        borderColor: "rgba(75, 192, 192, 0.2)",
+      },
+      {
+        label: "Warning Temperature",
+        data: chartData ? chartData.map(() => sensorInfo.warning_temp) : [],
+        fill: false,
+        borderColor: "rgba(255, 165, 0, 0.5)",
+        borderDash: [10, 5],
+        pointRadius: 0,
+      },
+      {
+        label: "Critical Temperature",
+        data: chartData ? chartData.map(() => sensorInfo.critical_temp) : [],
+        fill: false,
+        borderColor: "rgba(255, 0, 0, 0.5)",
+        borderDash: [10, 5],
+        pointRadius: 0,
+      },
+    ],
+  };
+
+  const vibrationXData = {
+    labels: chartData ? chartData.map((item) => new Date(item.timestamp).toLocaleString()) : [],
+    datasets: [
+      {
+        label: "Vibration X",
+        data: chartData ? chartData.map((item) => item.vibration_x) : [],
+        fill: false,
+        backgroundColor: "rgb(255, 99, 132)",
+        borderColor: "rgba(255, 99, 132, 0.2)",
+      },
+      {
+        label: "Warning Vibration X",
+        data: chartData ? chartData.map(() => sensorInfo.warning_vibration_x) : [],
+        fill: false,
+        borderColor: "rgba(255, 165, 0, 0.5)",
+        borderDash: [10, 5],
+        pointRadius: 0,
+      },
+      {
+        label: "Critical Vibration X",
+        data: chartData ? chartData.map(() => sensorInfo.critical_vibration_x) : [],
+        fill: false,
+        borderColor: "rgba(255, 0, 0, 0.5)",
+        borderDash: [10, 5],
+        pointRadius: 0,
+      },
+    ],
+  };
+
+  const vibrationYData = {
+    labels: chartData ? chartData.map((item) => new Date(item.timestamp).toLocaleString()) : [],
+    datasets: [
+      {
+        label: "Vibration Y",
+        data: chartData ? chartData.map((item) => item.vibration_y) : [],
+        fill: false,
+        backgroundColor: "rgb(54, 162, 235)",
+        borderColor: "rgba(54, 162, 235, 0.2)",
+      },
+      {
+        label: "Warning Vibration Y",
+        data: chartData ? chartData.map(() => sensorInfo.warning_vibration_y) : [],
+        fill: false,
+        borderColor: "rgba(255, 165, 0, 0.5)",
+        borderDash: [10, 5],
+        pointRadius: 0,
+      },
+      {
+        label: "Critical Vibration Y",
+        data: chartData ? chartData.map(() => sensorInfo.critical_vibration_y) : [],
+        fill: false,
+        borderColor: "rgba(255, 0, 0, 0.5)",
+        borderDash: [10, 5],
+        pointRadius: 0,
+      },
+    ],
+  };
+
+  const vibrationZData = {
+    labels: chartData ? chartData.map((item) => new Date(item.timestamp).toLocaleString()) : [],
+    datasets: [
+      {
+        label: "Vibration Z",
+        data: chartData ? chartData.map((item) => item.vibration_z) : [],
+        fill: false,
+        backgroundColor: "rgb(255, 206, 86)",
+        borderColor: "rgba(255, 206, 86, 0.2)",
+      },
+      {
+        label: "Warning Vibration Z",
+        data: chartData ? chartData.map(() => sensorInfo.warning_vibration_z) : [],
+        fill: false,
+        borderColor: "rgba(255, 165, 0, 0.5)",
+        borderDash: [10, 5],
+        pointRadius: 0,
+      },
+      {
+        label: "Critical Vibration Z",
+        data: chartData ? chartData.map(() => sensorInfo.critical_vibration_z) : [],
+        fill: false,
+        borderColor: "rgba(255, 0, 0, 0.5)",
+        borderDash: [10, 5],
+        pointRadius: 0,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      title: {
+        display: true,
+        text: "Sensor Data Line Chart",
+      },
+    },
+  };
+
   return (
     <div className="flex w-full min-h-screen bg-gray-50">
       <Sidebar />
@@ -163,16 +328,13 @@ const SensorForm = () => {
             <form onSubmit={handleSubmit} className="space-y-8 mt-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormControl fullWidth>
-                  <Typography
-                    variant="subtitle2"
-                    className="text-gray-700 mb-2"
-                  >
-                    Serial Number*
+                  <Typography variant="subtitle2" className="text-gray-700 mb-2">
+                    ID Sensor
                   </Typography>
                   <StyledTextField
                     required
-                    value={sensorInfo.serial_number}
-                    onChange={handlesensorInfoChange("serial_number")}
+                    value={sensorInfo.id_sensor}
+                    onChange={handlesensorInfoChange("id_sensor")}
                     placeholder="กรุณากรอกรหัสเซ็นเซอร์"
                     size="small"
                     className="bg-white"
@@ -183,10 +345,7 @@ const SensorForm = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormControl fullWidth>
-                  <Typography
-                    variant="subtitle2"
-                    className="text-gray-700 mb-2"
-                  >
+                  <Typography variant="subtitle2" className="text-gray-700 mb-2">
                     ชื่อเซ็นเซอร์
                   </Typography>
                   <StyledTextField
@@ -201,14 +360,9 @@ const SensorForm = () => {
                 </FormControl>
               </div>
 
-              
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormControl fullWidth>
-                  <Typography
-                    variant="subtitle2"
-                    className="text-gray-700 mb-2"
-                  >
+                  <Typography variant="subtitle2" className="text-gray-700 mb-2">
                     รายละเอียด
                   </Typography>
                   <StyledTextField
@@ -226,10 +380,7 @@ const SensorForm = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormControl fullWidth>
-                  <Typography
-                    variant="subtitle2"
-                    className="text-gray-700 mb-2"
-                  >
+                  <Typography variant="subtitle2" className="text-gray-700 mb-2">
                     หมายเหตุ
                   </Typography>
                   <StyledTextField
@@ -241,6 +392,24 @@ const SensorForm = () => {
                     disabled={!editState}
                     multiline
                     rows={2}
+                  />
+                </FormControl>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <FormControl fullWidth>
+                  <Typography variant="subtitle2" className="text-gray-700 mb-2">
+                    ระดับความรุนแรง
+                  </Typography>
+                  <StyledTextField
+                    value={sensorInfo.severity}
+                    onChange={handlesensorInfoChange("severity")}
+                    placeholder=""
+                    size="small"
+                    className="bg-white"
+                    disabled={!editState}
+                    multiline
+                    rows={1}
                   />
                 </FormControl>
               </div>
@@ -396,6 +565,90 @@ const SensorForm = () => {
                 )}
               </div>
             </form>
+          </CardContent>
+        </StyledCard>
+        <StyledCard sx={{ marginTop: 2 }}>
+          <CardContent className="p-6">
+            <Box className="flex justify-between items-center mb-6">
+              <Typography
+                variant="h5"
+                className="font-semibold text-gray-800"
+              >
+                Temperature
+              </Typography>
+            </Box>
+            <div style={{ height: 400, width: "100%" }}>
+              {chartData && chartData.length > 0 ? (
+                <Line data={tempData} options={options} />
+              ) : (
+                <Typography variant="body1" className="text-gray-500">
+                  No data available to display the chart.
+                </Typography>
+              )}
+            </div>
+          </CardContent>
+        </StyledCard>
+        <StyledCard sx={{ marginTop: 2 }}>
+          <CardContent className="p-6">
+            <Box className="flex justify-between items-center mb-6">
+              <Typography
+                variant="h5"
+                className="font-semibold text-gray-800"
+              >
+                Vibration X
+              </Typography>
+            </Box>
+            <div style={{ height: 400, width: "100%" }}>
+              {chartData && chartData.length > 0 ? (
+                <Line data={vibrationXData} options={options} />
+              ) : (
+                <Typography variant="body1" className="text-gray-500">
+                  No data available to display the chart.
+                </Typography>
+              )}
+            </div>
+          </CardContent>
+        </StyledCard>
+        <StyledCard sx={{ marginTop: 2 }}>
+          <CardContent className="p-6">
+            <Box className="flex justify-between items-center mb-6">
+              <Typography
+                variant="h5"
+                className="font-semibold text-gray-800"
+              >
+                Vibration Y
+              </Typography>
+            </Box>
+            <div style={{ height: 400, width: "100%" }}>
+              {chartData && chartData.length > 0 ? (
+                <Line data={vibrationYData} options={options} />
+              ) : (
+                <Typography variant="body1" className="text-gray-500">
+                  No data available to display the chart.
+                </Typography>
+              )}
+            </div>
+          </CardContent>
+        </StyledCard>
+        <StyledCard sx={{ marginTop: 2 }}>
+          <CardContent className="p-6">
+            <Box className="flex justify-between items-center mb-6">
+              <Typography
+                variant="h5"
+                className="font-semibold text-gray-800"
+              >
+                Vibration Z
+              </Typography>
+            </Box>
+            <div style={{ height: 400, width: "100%" }}>
+              {chartData && chartData.length > 0 ? (
+                <Line data={vibrationZData} options={options} />
+              ) : (
+                <Typography variant="body1" className="text-gray-500">
+                  No data available to display the chart.
+                </Typography>
+              )}
+            </div>
           </CardContent>
         </StyledCard>
       </div>

@@ -75,6 +75,21 @@ export const DeleteSensor = async (id) => {
     }
 };
 
+export const GetSensorData = async (id) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/api/sensor/data/${id}`, {
+      headers: {
+        'Authorization': `Bearer`,
+        "ngrok-skip-browser-warning": "true"
+      }
+    });
+    return response.data;
+  } catch (e) {
+    console.error("Error fetching sensor data from API:", e);
+    throw e; // Re-throw the original error
+  }
+};
+
 
 /////////Korawit////////
 
