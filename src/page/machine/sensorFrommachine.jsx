@@ -26,7 +26,7 @@ import {
 } from "../../service/machine/machine_service";
 
 import { TbPhotoSensor3 } from "react-icons/tb";
-import { CreateSensor, GetAllSensorById, UpdateSensor, GetSensorData } from "../../service/sensor/sensor_service";
+import { CreateSensor, GetAllSensorById, UpdateSensor, GetSensorData,CreateSensorData  } from "../../service/sensor/sensor_service";
 
 // Register chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -181,20 +181,60 @@ const SensorForm = () => {
       AlertError();
     }
   };
+  //********************************************************************************************************************************
+  const handleAddSensorData = async (type) => {
+    try {
+      let data = {
+        id_sensor: sensorInfo.id_sensor,
+        vibration_x: 0,
+        vibration_y: 0,
+        vibration_z: 0,
+        temp: 0,
+      };
 
+      // กำหนดค่าตามประเภท
+      if (type === "good") {
+        data.vibration_x = sensorInfo.warning_vibration_x - 1;
+        data.vibration_y = sensorInfo.warning_vibration_y - 1;
+        data.vibration_z = sensorInfo.warning_vibration_z - 1;
+        data.temp = sensorInfo.warning_temp - 1;
+      } else if (type === "warning") {
+        data.vibration_x = sensorInfo.warning_vibration_x + 1;
+        // data.vibration_y = sensorInfo.warning_vibration_y + 1;
+        // data.vibration_z = sensorInfo.warning_vibration_z + 1;
+        // data.temp = sensorInfo.warning_temp + 1;
+      } else if (type === "critical") {
+        data.vibration_x = sensorInfo.critical_vibration_x + 1;
+        // data.vibration_y = sensorInfo.critical_vibration_y + 1;
+        // data.vibration_z = sensorInfo.critical_vibration_z + 1;
+        // data.temp = sensorInfo.critical_temp + 1;
+      }
+
+      // เรียก API เพื่อเพิ่มข้อมูล
+      const res = await CreateSensorData(data); // ใช้ฟังก์ชัน API ที่เหมาะสม
+      console.log("Data added:", res);
+      AlertSuccess("Data added successfully!");
+    } catch (error) {
+      console.error("Error adding sensor data:", error);
+      AlertError("Failed to add data!");
+    }
+  };
+  //********************************************************************************************************************************
   const tempData = {
-    labels: chartData ? chartData.map((item) => new Date(item.timestamp).toLocaleString()) : [],
+    labels: chartData
+      ? chartData.slice(-20).map((item) => new Date(item.timestamp).toLocaleString())
+      : [],
     datasets: [
       {
         label: "Temperature",
-        data: chartData ? chartData.map((item) => item.temp) : [],
+        data: chartData ? chartData.slice(-20).map((item) => item.temp) : [],
         fill: false,
         backgroundColor: "rgb(75, 192, 192)",
         borderColor: "rgba(75, 192, 192, 0.2)",
       },
       {
         label: "Warning Temperature",
-        data: chartData ? chartData.map(() => sensorInfo.warning_temp) : [],
+        data: chartData ? chartData.slice(-20).map(() => sensorInfo.warning_temp) : [],
         fill: false,
         borderColor: "rgba(255, 165, 0, 0.5)",
         borderDash: [10, 5],
@@ -202,7 +242,7 @@ const SensorForm = () => {
       },
       {
         label: "Critical Temperature",
-        data: chartData ? chartData.map(() => sensorInfo.critical_temp) : [],
+        data: chartData ? chartData.slice(-20).map(() => sensorInfo.critical_temp) : [],
         fill: false,
         borderColor: "rgba(255, 0, 0, 0.5)",
         borderDash: [10, 5],
@@ -210,20 +250,22 @@ const SensorForm = () => {
       },
     ],
   };
-
+  
   const vibrationXData = {
-    labels: chartData ? chartData.map((item) => new Date(item.timestamp).toLocaleString()) : [],
+    labels: chartData
+      ? chartData.slice(-20).map((item) => new Date(item.timestamp).toLocaleString())
+      : [],
     datasets: [
       {
         label: "Vibration X",
-        data: chartData ? chartData.map((item) => item.vibration_x) : [],
+        data: chartData ? chartData.slice(-20).map((item) => item.vibration_x) : [],
         fill: false,
         backgroundColor: "rgb(255, 99, 132)",
         borderColor: "rgba(255, 99, 132, 0.2)",
       },
       {
         label: "Warning Vibration X",
-        data: chartData ? chartData.map(() => sensorInfo.warning_vibration_x) : [],
+        data: chartData ? chartData.slice(-20).map(() => sensorInfo.warning_vibration_x) : [],
         fill: false,
         borderColor: "rgba(255, 165, 0, 0.5)",
         borderDash: [10, 5],
@@ -231,7 +273,7 @@ const SensorForm = () => {
       },
       {
         label: "Critical Vibration X",
-        data: chartData ? chartData.map(() => sensorInfo.critical_vibration_x) : [],
+        data: chartData ? chartData.slice(-20).map(() => sensorInfo.critical_vibration_x) : [],
         fill: false,
         borderColor: "rgba(255, 0, 0, 0.5)",
         borderDash: [10, 5],
@@ -239,20 +281,22 @@ const SensorForm = () => {
       },
     ],
   };
-
+  
   const vibrationYData = {
-    labels: chartData ? chartData.map((item) => new Date(item.timestamp).toLocaleString()) : [],
+    labels: chartData
+      ? chartData.slice(-20).map((item) => new Date(item.timestamp).toLocaleString())
+      : [],
     datasets: [
       {
         label: "Vibration Y",
-        data: chartData ? chartData.map((item) => item.vibration_y) : [],
+        data: chartData ? chartData.slice(-20).map((item) => item.vibration_y) : [],
         fill: false,
         backgroundColor: "rgb(54, 162, 235)",
         borderColor: "rgba(54, 162, 235, 0.2)",
       },
       {
         label: "Warning Vibration Y",
-        data: chartData ? chartData.map(() => sensorInfo.warning_vibration_y) : [],
+        data: chartData ? chartData.slice(-20).map(() => sensorInfo.warning_vibration_y) : [],
         fill: false,
         borderColor: "rgba(255, 165, 0, 0.5)",
         borderDash: [10, 5],
@@ -260,7 +304,7 @@ const SensorForm = () => {
       },
       {
         label: "Critical Vibration Y",
-        data: chartData ? chartData.map(() => sensorInfo.critical_vibration_y) : [],
+        data: chartData ? chartData.slice(-20).map(() => sensorInfo.critical_vibration_y) : [],
         fill: false,
         borderColor: "rgba(255, 0, 0, 0.5)",
         borderDash: [10, 5],
@@ -268,20 +312,22 @@ const SensorForm = () => {
       },
     ],
   };
-
+  
   const vibrationZData = {
-    labels: chartData ? chartData.map((item) => new Date(item.timestamp).toLocaleString()) : [],
+    labels: chartData
+      ? chartData.slice(-20).map((item) => new Date(item.timestamp).toLocaleString())
+      : [],
     datasets: [
       {
         label: "Vibration Z",
-        data: chartData ? chartData.map((item) => item.vibration_z) : [],
+        data: chartData ? chartData.slice(-20).map((item) => item.vibration_z) : [],
         fill: false,
         backgroundColor: "rgb(255, 206, 86)",
         borderColor: "rgba(255, 206, 86, 0.2)",
       },
       {
         label: "Warning Vibration Z",
-        data: chartData ? chartData.map(() => sensorInfo.warning_vibration_z) : [],
+        data: chartData ? chartData.slice(-20).map(() => sensorInfo.warning_vibration_z) : [],
         fill: false,
         borderColor: "rgba(255, 165, 0, 0.5)",
         borderDash: [10, 5],
@@ -289,7 +335,7 @@ const SensorForm = () => {
       },
       {
         label: "Critical Vibration Z",
-        data: chartData ? chartData.map(() => sensorInfo.critical_vibration_z) : [],
+        data: chartData ? chartData.slice(-20).map(() => sensorInfo.critical_vibration_z) : [],
         fill: false,
         borderColor: "rgba(255, 0, 0, 0.5)",
         borderDash: [10, 5],
@@ -309,6 +355,13 @@ const SensorForm = () => {
         text: "Sensor Data Line Chart",
       },
     },
+    scales: {
+      y: {
+        beginAtZero: true, // เริ่มต้นที่ 0 บนแกน Y
+      },
+    },
+
+
   };
 
   return (
@@ -395,25 +448,34 @@ const SensorForm = () => {
                   />
                 </FormControl>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <FormControl fullWidth>
                   <Typography variant="subtitle2" className="text-gray-700 mb-2">
-                    ระดับความรุนแรง
+                    ระดับความรุนแรงในช่วงเฝ้าระวัง
                   </Typography>
                   <StyledTextField
-                    value={sensorInfo.severity}
-                    onChange={handlesensorInfoChange("severity")}
+                    value={sensorInfo.warning_severity}
+                    onChange={handlesensorInfoChange("warning_severity")}
                     placeholder=""
                     size="small"
                     className="bg-white"
                     disabled={!editState}
-                    multiline
-                    rows={1}
+                  />
+                </FormControl>
+                <FormControl fullWidth>
+                  <Typography variant="subtitle2" className="text-gray-700 mb-2">
+                    ระดับความรุนแรงในช่วงวิกฤต
+                  </Typography>
+                  <StyledTextField
+                    value={sensorInfo.critical_severity}
+                    onChange={handlesensorInfoChange("critical_severity")}
+                    placeholder=""
+                    size="small"
+                    className="bg-white"
+                    disabled={!editState}
                   />
                 </FormControl>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <FormControl fullWidth>
                   <Typography variant="subtitle2" className="text-gray-700 mb-2">
@@ -651,6 +713,47 @@ const SensorForm = () => {
             </div>
           </CardContent>
         </StyledCard>
+        <div className="flex justify-end space-x-4 pt-8">
+          <Button
+            variant="contained"
+            className="w-32 md:w-40"
+            sx={{
+              backgroundColor: "#22c55e",
+              "&:hover": {
+                backgroundColor: "#16a34a",
+              },
+            }}
+            onClick={() => handleAddSensorData("good")}
+          >
+            Add Good Data
+          </Button>
+          <Button
+            variant="contained"
+            className="w-32 md:w-40"
+            sx={{
+              backgroundColor: "#facc15",
+              "&:hover": {
+                backgroundColor: "#eab308",
+              },
+            }}
+            onClick={() => handleAddSensorData("warning")}
+          >
+            Add Warning Data
+          </Button>
+          <Button
+            variant="contained"
+            className="w-32 md:w-40"
+            sx={{
+              backgroundColor: "#ef4444",
+              "&:hover": {
+                backgroundColor: "#dc2626",
+              },
+            }}
+            onClick={() => handleAddSensorData("critical")}
+          >
+            Add Critical Data
+          </Button>
+        </div>
       </div>
     </div>
   );

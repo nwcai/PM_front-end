@@ -90,6 +90,22 @@ export const GetSensorData = async (id) => {
   }
 };
 
+export const CreateSensorData = async (data) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/api/sensor/create_data`, data, {
+      headers: {
+        'Authorization': `Bearer`,
+        "ngrok-skip-browser-warning": "true"
+      }
+    });
+    //console.log("machine List:", response.data);
+    return response.data;
+  } catch (e) {
+    console.error("Error fetching users from API:", e);
+    throw e; // Re-throw the original error
+  }
+
+};
 
 /////////Korawit////////
 

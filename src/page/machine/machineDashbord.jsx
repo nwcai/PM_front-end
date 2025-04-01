@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import {
   Card,
   CardContent,
@@ -24,6 +24,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Divider,
+  Box,
 } from "@mui/material";
 import {
   Search,
@@ -38,6 +40,7 @@ import { FaEye } from "react-icons/fa";
 import {
   DeleteMachinesById,
   GetAllMachines,
+  GetMachinesById,
 } from "../../service/machine/machine_service";
 
 const MachineDashboard = () => {
@@ -223,4 +226,129 @@ const MachineDashboard = () => {
   );
 };
 
+const MachineForm = () => {
+  const navigate = useNavigate();
+  const { id } = useParams(); // ดึง id จาก URL
+  console.log("Machine ID from useParams in MachineForm:", id); // Debugging log
+
+  const [editState, setEditState] = useState(true);
+  const [createState, setCreateState] = useState(true);
+  const [machineInfo, setMachineInfo] = useState({
+    machine_id: "",
+    name: "",
+    detail: "",
+    note: "",
+    life_time: "",
+  });
+  const [sensorData, setSensorData] = useState([]);
+
+  useEffect(() => {
+    if (location.pathname.includes("edit")) {
+      setEditState(true);
+      setCreateState(false);
+      handleGetMachinesById();
+    } else if (location.pathname.includes("view")) {
+      setEditState(false);
+      setCreateState(false);
+      handleGetMachinesById();
+    } else if (location.pathname.includes("create")) {
+      setEditState(true);
+      setCreateState(true);
+    }
+  }, []);
+
+  const handleGetMachinesById = async () => {
+    try {
+      if (!id) {
+        console.error("Invalid machine ID");
+        return;
+      }
+
+      const res = await GetMachinesById(id);
+
+      if (!res || !res.id_machine) {
+        console.error("Invalid machine response", res);
+        return;
+      }
+
+      setMachineInfo(res); // ตั้งค่า machineInfo
+      await handleGetSensorData(res.id_machine); // ดึงข้อมูลเซ็นเซอร์
+    } catch (error) {
+      console.error("Error getting machine:", error);
+      AlertError();
+    }
+  };
+
+  return (
+    <div className="flex w-full min-h-screen bg-gray-50">
+      <Sidebar />
+      <div className="flex-1 p-4 md:p-8">
+        <StyledCard elevation={3} className="w-full">
+          <CardContent className="p-6">
+            <Box className="flex justify-between items-center mb-6">
+              <Typography variant="h5" className="font-semibold text-gray-800">
+                ข้อมูลเครื่องจักร
+              </Typography>
+            </Box>
+
+            <Divider className="mb-8" />
+
+            <form onSubmit={handleSubmit} className="space-y-8 mt-5">
+              {/* ฟอร์มสำหรับกรอกข้อมูล */}
+            </form>
+          </CardContent>
+        </StyledCard>
+
+        {/* *****************************************GRAPH UI******************************************************* */}
+        {!createState && machineInfo.id_machine && (
+          <StyledCard sx={{ marginTop: 2 }}>
+            <CardContent>
+              <Typography variant="h5" className="font-semibold text-gray-800">
+                กราฟ
+              </Typography>
+
+              {/* ส่ง machineInfo.id_machine ไปยัง RULChart */}
+              <RULChart machineId={machineInfo.id_machine} />
+
+              <div className="flex justify-end space-x-4 pt-8">
+                <Button
+                  variant="outlined"
+                  className="w-32 md:w-40"
+                  sx={{
+                    mx: 2,
+                    borderColor: "#94a3b8",
+                    color: "#64748b",
+                    "&:hover": {
+                      borderColor: "#64748b",
+                      backgroundColor: "#f8fafc",
+                    },
+                  }}
+                  onClick={handleEventList}
+                >
+                  Event
+                </Button>
+                <Button
+                  variant="contained"
+                  type="submit"
+                  className="w-32 md:w-40"
+                  sx={{
+                    backgroundColor: "#2563eb",
+                    "&:hover": {
+                      backgroundColor: "#1d4ed8",
+                    },
+                  }}
+                  onClick={handleAddEvent}
+                >
+                  เพิ่ม Event
+                </Button>
+              </div>
+            </CardContent>
+          </StyledCard>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default MachineDashboard;
+export { MachineForm };

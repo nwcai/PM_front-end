@@ -32,12 +32,15 @@ import {
   CreateMachine,
   GetMachinesById,
   UpdateMachine,
+  AddEvent,
+  UpdateSensorState,
+
 } from "../../service/machine/machine_service";
 import { DataGrid } from "@mui/x-data-grid";
 
 import { TbPhotoSensor3 } from "react-icons/tb";
 import { DeleteSensor, GetAllSensorByIdMachine, KorawitGetAllSensorByIdMachine } from "../../service/sensor/sensor_service";
-
+import RULChart from "../../component/RULChart" // Adjust the path if necessary
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 // Custom styled components
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -52,38 +55,17 @@ const StyledTextField = styled(TextField)({
     },
   },
 });
-//************************************************************************************************
-const calculateRUL = (timeToZero, currentTime) => {
-  const aInitial = 100 / (timeToZero ** 2);
-  const t = Array.from({ length: 100 }, (_, i) => (i / 99) * timeToZero);
-  const RULCombined = t.map(time => 100 - aInitial * (time ** 2));
+//**********************************************GRAPH CALCURATE**************************************************
 
-  const RULCurrent = interpolate(currentTime, t, RULCombined);
-  const timeToWarning = interpolate(70, RULCombined, t);
-  const timeToCritical = interpolate(40, RULCombined, t);
 
-  const hoursToWarning = Math.max(0, timeToWarning - currentTime);
-  const hoursToCritical = Math.max(0, timeToCritical - currentTime);
 
-  return { t, RULCombined, RULCurrent, hoursToWarning, hoursToCritical };
-};
-
-const interpolate = (x, xs, ys) => {
-  for (let i = 1; i < xs.length; i++) {
-    if (x >= ys[i] && x <= ys[i - 1]) {
-      const x0 = xs[i - 1], x1 = xs[i];
-      const y0 = ys[i - 1], y1 = ys[i];
-      return x0 + ((x - y0) * (x1 - x0)) / (y1 - y0);
-    }
-  }
-  return xs[xs.length - 1];
-};
 //************************************************************************************************
 
 const MachineForm = () => {
   const navigate = useNavigate();
   const path = useLocation();
   const { id } = useParams();
+  console.log("Machine ID from useParams in MachineForm:", id); // Debugging log
   const [editState, setEditState] = useState(true);
   const [createState, setCreateState] = useState(true);
   const [machineInfo, setMachineInfo] = useState({
@@ -94,12 +76,7 @@ const MachineForm = () => {
     life_time: "",
   });
   const [sensorData, setSensorData] = useState([]); // New state for sensor data
-  const [rulData, setRulData] = useState([]);
-  const [currentRUL, setCurrentRUL] = useState(null);
-  const [hoursToWarning, setHoursToWarning] = useState(null);
-  const [hoursToCritical, setHoursToCritical] = useState(null);
-  const [currentPoint, setCurrentPoint] = useState({ time: 0, value: 0 });
-  const [currentTime, setCurrentTime] = useState(0);
+
 
 
   useEffect(() => {
@@ -118,18 +95,10 @@ const MachineForm = () => {
     }
   }, []);
 
-  useEffect(() => {
-    if (machineInfo.life_time) {
-      const lifeTimeInHours = machineInfo.life_time;
-      const { RULCurrent } = calculateRUL(lifeTimeInHours, currentTime);
-      setCurrentPoint({ time: currentTime, value: RULCurrent });
-    }
-  }, [currentTime, machineInfo.life_time]);
-
 
   const columns = [
     {
-      field: "serial_number",
+      field: "id_sensor",
       headerName: "SERIAL_ID",
       flex: 1,
       align: "center",
@@ -146,6 +115,14 @@ const MachineForm = () => {
     {
       field: "status_name",
       headerName: "สถานะ",
+      flex: 1,
+      editable: true,
+      align: "center",
+      headerAlign: "center",
+    },
+    {
+      field: "state",
+      headerName: "สภาพ",
       flex: 1,
       editable: true,
       align: "center",
@@ -271,14 +248,18 @@ const MachineForm = () => {
 
   const handleUpdateMachine = async (data) => {
     try {
-      const res = await UpdateMachine(data, id);
-      AlertSuccess();
-      navigate("/machine/dashboard");
+        const res = await UpdateMachine(data, id);
+        AlertSuccess("Machine updated successfully!");
+        navigate("/machine/dashboard");
     } catch (error) {
-      console.error("Error creating machine:", error);
-      AlertError();
+        console.error("Error updating machine:", error);
+        if (error.message === "Network Error") {
+            AlertError("Unable to connect to the server. Please check your network connection.");
+        } else {
+            AlertError("Failed to update machine!");
+        }
     }
-  };
+};
 
   const handleGetSensorData = async (machineId) => {
     try {
@@ -312,73 +293,59 @@ const MachineForm = () => {
 
   const handleGetMachinesById = async () => {
     try {
-      if (!id) {
-        console.error("Invalid machine ID");
-        return;
-      }
+        if (!id) {
+            console.error("Invalid machine ID");
+            return;
+        }
 
-      const res = await GetMachinesById(id);
+        const res = await GetMachinesById(id);
+        console.log("Response from GetMachinesById:", res);
 
-      if (!res || !res.id_machine) {
-        console.error("Invalid machine response", res);
-        return;
-      }
+        if (!res || !res.id_machine) {
+            console.error("Invalid machine response", res);
+            return;
+        }
 
-      setMachineInfo(res);
-      await handleGetSensorData(res.id_machine);
-      // Fetch RUL data here
-      const lifeTimeInHours = res.life_time; // Use life_time directly as hours
-      const { t, RULCombined, RULCurrent, hoursToWarning, hoursToCritical } = calculateRUL(lifeTimeInHours, currentTime);
-      setRulData(t.map((time, index) => ({ time, value: RULCombined[index] })));
-      setCurrentRUL(RULCurrent);
-      setHoursToWarning(hoursToWarning);
-      setHoursToCritical(hoursToCritical);
-      setCurrentPoint({ time: currentTime, value: RULCurrent }); // Set current point here
+        // ตั้งค่า machineInfo ด้วย id และ id_machine
+        setMachineInfo({
+            ...res,
+            id: id, // ใช้ id จาก useParams
+        });
+
+        // ดึงข้อมูลเซ็นเซอร์โดยใช้ id_machine
+        await handleGetSensorData(res.id_machine);
     } catch (error) {
-      console.error("Error getting machine:", error);
-      AlertError();
+        console.error("Error getting machine:", error);
+        AlertError();
     }
-  };
-// ************************************************************************************************
-const rulChartData = {
-  labels: rulData.map(data => data.time),
-  datasets: [
-    {
-      label: 'Remaining Useful Life (RUL)',
-      data: rulData.map(data => data.value),
-      borderColor: 'rgba(75, 192, 192, 1)',
-      backgroundColor: 'rgba(75, 192, 192, 0.2)',
-      fill: true,
-      pointRadius: 0, // Remove points from the graph
-    },
-    {
-      label: 'Warning Level (70%)',
-      data: Array(rulData.length).fill(70),
-      borderColor: 'rgba(255, 165, 0, 1)',
-      borderDash: [10, 5],
-      fill: false,
-      pointRadius: 0,
-    },
-    {
-      label: 'Critical Level (40%)',
-      data: Array(rulData.length).fill(40),
-      borderColor: 'rgba(255, 0, 0, 1)',
-      borderDash: [10, 5],
-      fill: false,
-      pointRadius: 0,
-    },
-    {
-      label: 'Current Point',
-      data: [{ x: currentPoint.time, y: currentPoint.value }],
-      borderColor: 'rgba(0, 0, 255, 1)',
-      backgroundColor: 'rgba(0, 0, 255, 1)',
-      fill: false,
-      pointRadius: 5,
-      pointHoverRadius: 7,
-    },
-  ],
 };
-//************************************************************************************************
+  // ********************************************RUL****************************************************
+ 
+
+  
+  // ********************************************EVENT****************************************************
+  const handleAddEvent = () => {
+    console.log("machineInfo.id_machine:", machineInfo.id_machine);
+    if (!machineInfo.id_machine) {
+      console.error("Machine ID is missing!");
+      return;
+    }
+    navigate(`/machine/event/create/${machineInfo.id_machine}`);
+  };
+
+  const handleEventList = () => {
+    console.log("machineInfo.id_machine:", machineInfo.id_machine);
+    if (!machineInfo.id_machine) {
+      console.error("Machine ID is missing!");
+      return;
+    }
+    navigate(`/machine/event/list/${machineInfo.id_machine}`);
+  };
+
+  // ********************************************GRAPH SETTING****************************************************
+  
+
+  //************************************************************************************************
 
   //
 
@@ -417,7 +384,7 @@ const rulChartData = {
                     variant="subtitle2"
                     className="text-gray-700 mb-2"
                   >
-                    รหัสเครื่องจักร*
+                    รหัสเครื่องจักร
                   </Typography>
                   <StyledTextField
                     required
@@ -437,7 +404,7 @@ const rulChartData = {
                     variant="subtitle2"
                     className="text-gray-700 mb-2"
                   >
-                    ชื่อเครื่องจักร*
+                    ชื่อเครื่องจักร
                   </Typography>
                   <StyledTextField
                     required
@@ -509,7 +476,7 @@ const rulChartData = {
                     className="bg-white"
                     disabled={!editState}
                     multiline
-                    //rows={2}
+                  //rows={2}
                   />
                 </FormControl>
               </div>
@@ -570,35 +537,62 @@ const rulChartData = {
             </form>
           </CardContent>
         </StyledCard>
-{/* ************************************************************************************************ */}
-<StyledCard sx={{ marginTop: 2 }}>
-          <CardContent className="p-6">
-            <Box className="flex justify-between items-center mb-6">
-              <Typography variant="h5" className="font-semibold text-gray-800">
-                กราฟ
-              </Typography>
-            </Box>
-            <div style={{ height: 400, width: "100%" }}>
-              <Line data={rulChartData} />
-            </div>
-            {currentRUL !== null && (
-              <Typography variant="body1" className="mt-4">
-                RUL ปัจจุบัน: {currentRUL.toFixed(2)}%
-              </Typography>
+        {/* *****************************************GRAPH UI******************************************************* */}
+        {!createState && (
+          <StyledCard sx={{ marginTop: 2 }}>
+          <CardContent>
+            <Typography variant="h5" className="font-semibold text-gray-800">
+              กราฟ
+            </Typography>
+            {!createState && machineInfo.id_machine && (
+              <>
+                {console.log("Passing id and id_machine to RULChart:", machineInfo.id, machineInfo.id_machine)}
+                <RULChart id={machineInfo.id} machineId={machineInfo.id_machine} />
+              </>
             )}
-            {hoursToWarning !== null && (
-              <Typography variant="body1" className="mt-2">
-                อีก {hoursToWarning.toFixed(2)} ชั่วโมง จะถึงเส้นเตือน (70%)
-              </Typography>
-            )}
-            {hoursToCritical !== null && (
-              <Typography variant="body1" className="mt-2">
-                อีก {hoursToCritical.toFixed(2)} ชั่วโมง จะถึงเส้นวิกฤต (40%)
-              </Typography>
-            )}
-          </CardContent>
-        </StyledCard>
-{/* ************************************************************************************************ */}
+              <div className="flex justify-end space-x-4 pt-8">
+
+                <Button
+                  variant="outlined"
+                  className="w-32 md:w-40"
+                  sx={{
+                    mx: 2,
+                    borderColor: "#94a3b8",
+                    color: "#64748b",
+                    "&:hover": {
+                      borderColor: "#64748b",
+                      backgroundColor: "#f8fafc",
+                    },
+                  }}
+                  onClick={handleEventList}
+
+                >
+                  Event
+                </Button>
+                <Button
+                  variant="contained"
+                  type="submit"
+                  className="w-32 md:w-40"
+                  sx={{
+                    backgroundColor: "#2563eb",
+                    "&:hover": {
+                      backgroundColor: "#1d4ed8",
+                    },
+                  }}
+                  onClick={handleAddEvent}
+                >
+                  เพิ่ม Event
+                </Button>
+              </div>
+            </CardContent>
+          </StyledCard>
+
+
+
+        )}
+
+
+        {/* ************************************************************************************************ */}
         {!createState && (
           <StyledCard sx={{ marginTop: 2 }}>
             <CardContent className="p-6">

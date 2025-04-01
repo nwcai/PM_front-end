@@ -7,6 +7,9 @@ import EmployeeDashboard from "./page/user/employreeDashbord";
 import MachineDashboard from "./page/machine/machineDashbord";
 import MachineForm from "./page/machine/machineFrom_view";
 import SensorForm from "./page/machine/sensorFrommachine";
+import EventForm from "./page/event/EventForm";
+import EventList from "./page/event/EventList";
+import AddRepairForm from "./page/event/AddRepair";
 
 function App() {
   return (
@@ -29,6 +32,9 @@ function App() {
         <Route path="/machine/sensor/create/:id" element={<SensorForm />} />
         <Route path="/machine/sensor/view/:machine_id/:id" element={<SensorForm />} />
         <Route path="/machine/sensor/edit/:machine_id/:id" element={<SensorForm />} />
+        <Route path="/machine/event/create/:id_machine" element={<EventForm />} />
+        <Route path="/machine/event/list/:id_machine" element={<EventList />} />
+        <Route path="/machine/event/AddRepair/:id_event" element={<AddRepairForm />} />
       </Routes>
     </Router>
   );
