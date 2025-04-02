@@ -542,7 +542,7 @@ const MachineForm = () => {
           <StyledCard sx={{ marginTop: 2 }}>
           <CardContent>
             <Typography variant="h5" className="font-semibold text-gray-800">
-              กราฟ
+            RUL Prediction Chart
             </Typography>
             {!createState && machineInfo.id_machine && (
               <>
