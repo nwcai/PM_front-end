@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+
 const BASE_URL = "http://localhost:3000";
 
 export const GetAllSensorByIdMachine = async (id) => {
@@ -107,6 +108,15 @@ export const CreateSensorData = async (data) => {
 
 };
 
+export const FetchAndSaveSensors = async () => {
+    try {
+        const response = await axios.get(`${BASE_URL}/api/sensor/fetch-and-save-sensors`);
+        console.log('Sensors fetched and saved:', response.data);
+    } catch (error) {
+        console.error('Error fetching and saving sensors:', error);
+    }
+};
+
 /////////Korawit////////
 
 const BASE_Korawit_URL = "http://Korawit.ddns.net:6060";
@@ -129,16 +139,3 @@ export const KorawitGetAllSensorByIdMachine = async (id) => {
     
   };
 
-  // var myHeaders = new Headers();
-  // myHeaders.append("api-key", "6e9caa8a-503a-4602-b577-84f2f0c776bd");
-  
-  // var requestOptions = {
-  //   method: 'GET',
-  //   headers: myHeaders,
-  //   redirect: 'follow'
-  // };
-  
-  // fetch("http://korawit.ddns.net:6000/sensors", requestOptions)
-  //   .then(response => response.text())
-  //   .then(result => console.log(result))
-  //   .catch(error => console.log('error', error));

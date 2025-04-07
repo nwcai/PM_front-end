@@ -83,6 +83,11 @@ const getSeverityFactor = (severity) => {
 };
 
 const generateRULData = (timeToZero, events) => {
+    if (!events || events.length === 0) {
+        console.warn("No events to process. Returning default RUL data.");
+        return { data: [], baseRUL: [], eventPoints: [], repairPoints: [] };
+    }
+
     const baseA = 100 / (timeToZero ** 2); // ค่าคงที่สำหรับการคำนวณ Base RUL
     const data = [];
     const baseRUL = []; // เก็บค่า Base RUL
@@ -120,8 +125,12 @@ const generateRULData = (timeToZero, events) => {
                 // คำนวณค่า Base RUL (RUL_normal) ในช่วงเวลานั้น
                 const RUL_normal = 100 - baseA * (t ** 2);
 
-                // เพิ่มค่า RUL หลังการซ่อม โดยจำกัดไม่ให้เกิน RUL_normal
-                RUL = Math.min(RUL + (RUL_normal - RUL) * event.repairEffectiveness, RUL_normal);
+                // ปรับค่า RUL หลังการซ่อม โดยจำกัดไม่ให้เกิน RUL_normal และไม่ให้เพิ่มขึ้นเกิน maxRULAfterRepair
+                RUL = Math.min(
+                    RUL + (RUL_normal - RUL) * event.repairEffectiveness,
+                    maxRULAfterRepair,
+                    RUL_normal
+                );
 
                 // ปรับค่า A หลังการซ่อม
                 const aAfterRepair = adjustedA * (1 - event.repairEffectiveness);
@@ -131,9 +140,10 @@ const generateRULData = (timeToZero, events) => {
                     const postRepairReduction = aAfterRepair * (t - event.repairTime) ** 2;
                     RUL = Math.max(0, RUL - postRepairReduction);
                 }
+                console.log(`Time: ${t}, RUL: ${RUL}, RUL_normal: ${RUL_normal}, maxRULAfterRepair: ${maxRULAfterRepair}, aAfterRepair: ${aAfterRepair}`);
             }
         });
-
+        
         RUL = Math.max(0, Math.min(100, RUL)); // จำกัดค่า RUL ให้อยู่ในช่วง 0-100
         data.push({ time: t.toFixed(1), RUL });
     }
@@ -168,12 +178,40 @@ const generateRULData = (timeToZero, events) => {
     return { data, baseRUL, eventPoints, repairPoints };
 };
 
-const calculateTimeToThreshold = (data, threshold) => {
-    const thresholdPoint = data.find(d => d.RUL <= threshold); // ค้นหาค่าที่ RUL <= threshold
-    if (thresholdPoint) {
-        return parseFloat(thresholdPoint.time).toFixed(1); // คืนค่าเวลาในรูปแบบทศนิยม 1 ตำแหน่ง
+const calculateTimeToThreshold = (data, threshold, currentPosition) => {
+    if (!data || data.length === 0) {
+        console.warn("No data available for threshold calculation.");
+        return "N/A";
     }
-    return null; // หากไม่มีค่า RUL ที่ต่ำกว่า threshold
+
+    if (!currentPosition) {
+        console.warn("Current position is not defined.");
+        return "N/A";
+    }
+
+    // ตรวจสอบว่าค่า RUL ทั้งหมดต่ำกว่า Threshold หรือไม่
+    const allBelowThreshold = data.every(d => d.RUL < threshold);
+    if (allBelowThreshold) {
+        return "Threshold already passed";
+    }
+
+    // ค้นหาค่าที่ RUL <= Threshold หลังจาก Current Position
+    const thresholdPoint = data.find(
+        d => parseFloat(d.time) >= parseFloat(currentPosition.x) && d.RUL <= threshold
+    );
+
+    if (thresholdPoint) {
+        // คำนวณเวลาที่เหลือจาก Current Position ถึง Threshold
+        const remainingTime = parseFloat(thresholdPoint.time) - parseFloat(currentPosition.x);
+        if (remainingTime <= 0) {
+            console.warn("Threshold already passed or invalid remaining time.");
+            return "Threshold already passed";
+        }
+        return remainingTime.toFixed(1); // คืนค่าเวลาในรูปแบบทศนิยม 1 ตำแหน่ง
+    }
+
+    console.warn(`No RUL value found below the threshold of ${threshold} after the current position.`);
+    return "Threshold already passed";
 };
 
 const RULChart = ({ id, machineId }) => {
@@ -191,39 +229,49 @@ const RULChart = ({ id, machineId }) => {
             try {
                 const fetchedMachineData = await fetchMachineData(id);
                 if (!fetchedMachineData.id_machine || !fetchedMachineData.create_date) return;
-                setMachineData(fetchedMachineData);
 
-                const eventList = await fetchEventsAndRepairs(machineId, fetchedMachineData.create_date);
-                setTimeToZero(fetchedMachineData.life_time);
-                setEvents(eventList);
+                if (
+                    !machineData ||
+                    machineData.id_machine !== fetchedMachineData.id_machine ||
+                    machineData.create_date !== fetchedMachineData.create_date
+                ) {
+                    setMachineData(fetchedMachineData);
 
-                const { data: generatedData, baseRUL: generatedBaseRUL, eventPoints: generatedEventPoints, repairPoints: generatedRepairPoints } = generateRULData(fetchedMachineData.life_time, eventList);
-                setData(generatedData);
-                setBaseRUL(generatedBaseRUL);
-                setEventPoints(generatedEventPoints);
-                setRepairPoints(generatedRepairPoints);
+                    const eventList = await fetchEventsAndRepairs(machineId, fetchedMachineData.create_date);
 
-                // คำนวณเวลาที่เหลือถึง Threshold
-                const timeToWarning = calculateTimeToThreshold(generatedData, 50); // Warning Threshold
-                const timeToCritical = calculateTimeToThreshold(generatedData, 30); // Critical Threshold
-                console.log(`Time to Warning Threshold: ${timeToWarning} hours`);
-                console.log(`Time to Critical Threshold: ${timeToCritical} hours`);
+                    if (JSON.stringify(events) !== JSON.stringify(eventList)) {
+                        setTimeToZero(fetchedMachineData.life_time);
+                        setEvents(eventList);
 
-                // คำนวณตำแหน่งปัจจุบัน
-                const currentTime = (new Date() - new Date(fetchedMachineData.create_date)) / (1000 * 60 * 60); // เวลาปัจจุบันในชั่วโมง
-                const currentDataPoint = generatedData.find(d => parseFloat(d.time) >= currentTime);
-                if (currentDataPoint) {
-                    setCurrentPosition({
-                        x: currentTime.toFixed(1),
-                        y: currentDataPoint.RUL,
-                    });
+                        const { data: generatedData, baseRUL: generatedBaseRUL, eventPoints: generatedEventPoints, repairPoints: generatedRepairPoints } =
+                            generateRULData(fetchedMachineData.life_time, eventList);
+
+                        setData(generatedData);
+                        setBaseRUL(generatedBaseRUL);
+                        setEventPoints(generatedEventPoints);
+                        setRepairPoints(generatedRepairPoints);
+
+                        // คำนวณตำแหน่งปัจจุบัน
+                        const currentTime = (new Date() - new Date(fetchedMachineData.create_date)) / (1000 * 60 * 60); // เวลาปัจจุบันในชั่วโมง
+                        const currentDataPoint = generatedData.find(d => parseFloat(d.time) >= currentTime);
+
+                        if (currentDataPoint) {
+                            setCurrentPosition({
+                                x: currentTime.toFixed(1),
+                                y: currentDataPoint.RUL,
+                            });
+                        } else {
+                            console.warn("No current data point found for the current time.");
+                            setCurrentPosition(null); // ตั้งค่าเป็น null หากไม่มีข้อมูล
+                        }
+                    }
                 }
             } catch (error) {
                 console.error("Failed to fetch data:", error);
             }
         };
         fetchData();
-    }, [id, machineId]);
+    }, [id, machineId, machineData, events]);
 
     // เตรียมข้อมูลสำหรับ Chart.js
     const chartData = {
@@ -237,7 +285,7 @@ const RULChart = ({ id, machineId }) => {
                 tension: 0.4,
                 borderWidth: 1, // ปรับขนาดเส้น Base RUL ให้บางลง
                 pointRadius: 0, // เอาจุด Base RUL ออก
-                order: 1, // กำหนดลำดับให้ Base RUL อยู่ด้านหลัง
+                order: 6, // กำหนดลำดับให้ Base RUL อยู่ด้านหลัง
             },
             ...(events.length > 0
                 ? [
@@ -249,7 +297,7 @@ const RULChart = ({ id, machineId }) => {
                           tension: 0.4,
                           borderWidth: 1, // ปรับขนาดเส้น RUL ให้บางลง
                           pointRadius: 0, // เอาจุด RUL ออก
-                          order: 2, // กำหนดลำดับให้เส้น RUL อยู่ด้านหลัง
+                          order: 5, // กำหนดลำดับให้เส้น RUL อยู่ด้านหลัง
                       },
                       {
                           label: "Events",
@@ -278,7 +326,7 @@ const RULChart = ({ id, machineId }) => {
                 backgroundColor: "blue",
                 type: "scatter", // ใช้ scatter สำหรับจุดตำแหน่งปัจจุบัน
                 pointRadius: 7,
-                order: 5, // กำหนดลำดับให้จุด Current อยู่ด้านหน้า
+                order: 1, // กำหนดลำดับให้จุด Current อยู่ด้านหน้า
             },
         ],
     };
@@ -290,20 +338,20 @@ const RULChart = ({ id, machineId }) => {
                 position: "top",
             },
             tooltip: {
-                mode: "index",
-                intersect: false,
+                mode: "nearest",
+                intersect: true,
                 callbacks: {
                     label: function (context) {
                         if (context.dataset.label === "Events") {
                             const event = context.raw;
-                            return `Event: ${event.name} (RUL: ${event.y}%)`;
+                            return `Event: ${event.name} (Time: ${event.x} hrs, RUL: ${event.y}%)`;
                         }
                         if (context.dataset.label === "Repairs") {
                             const repair = context.raw;
-                            return `Repair: ${repair.name} (RUL: ${repair.y}%)`;
+                            return `Repair: ${repair.name} (Time: ${repair.x} hrs, RUL: ${repair.y}%)`;
                         }
                         if (context.dataset.label === "Current Position") {
-                            return `Current Position: (RUL: ${context.raw.y}%)`;
+                            return `Current Position: (Time: ${context.raw.x} hrs, RUL: ${context.raw.y}%)`;
                         }
                         return `${context.dataset.label}: ${context.raw}%`;
                     },
@@ -339,6 +387,21 @@ const RULChart = ({ id, machineId }) => {
                     },
                 },
             },
+            zoom: {
+                pan: {
+                    enabled: true, // เปิดใช้งานการเลื่อน
+                    mode: "x", // เลื่อนในแนวนอน
+                },
+                zoom: {
+                    wheel: {
+                        enabled: true, // เปิดใช้งานการซูมด้วยเมาส์
+                    },
+                    pinch: {
+                        enabled: true, // เปิดใช้งานการซูมด้วยการ pinch (สำหรับอุปกรณ์สัมผัส)
+                    },
+                    mode: "x", // ซูมในแนวนอน
+                },
+            },
         },
         scales: {
             x: {
@@ -369,7 +432,7 @@ const RULChart = ({ id, machineId }) => {
     };
 
     const convertHoursToMonthsAndDays = (hours) => {
-        if (!hours) return "N/A"; // หากไม่มีค่า ให้แสดง "N/A"
+        if (!hours || isNaN(hours)) return "N/A"; // หากไม่มีค่า หรือค่าไม่ใช่ตัวเลข ให้แสดง "N/A"
         const days = Math.floor(hours / 24); // แปลงชั่วโมงเป็นวัน
         const months = Math.floor(days / 30); // แปลงวันเป็นเดือน (โดยประมาณ 1 เดือน = 30 วัน)
         const remainingDays = days % 30; // คำนวณวันที่เหลือหลังจากแปลงเป็นเดือน
@@ -381,11 +444,23 @@ const RULChart = ({ id, machineId }) => {
             <Line data={chartData} options={options} />
             <p>
                 Time to Warning Threshold (50%):{" "}
-                {convertHoursToMonthsAndDays(calculateTimeToThreshold(data, 50))}
+                {currentPosition
+                    ? calculateTimeToThreshold(data, 50, currentPosition) === "N/A"
+                        ? "N/A"
+                        : calculateTimeToThreshold(data, 50, currentPosition) === "Threshold already passed"
+                        ? "Threshold already passed"
+                        : convertHoursToMonthsAndDays(calculateTimeToThreshold(data, 50, currentPosition))
+                    : "Current position not defined"}
             </p>
             <p>
                 Time to Critical Threshold (30%):{" "}
-                {convertHoursToMonthsAndDays(calculateTimeToThreshold(data, 30))}
+                {currentPosition
+                    ? calculateTimeToThreshold(data, 30, currentPosition) === "N/A"
+                        ? "N/A"
+                        : calculateTimeToThreshold(data, 30, currentPosition) === "Threshold already passed"
+                        ? "Threshold already passed"
+                        : convertHoursToMonthsAndDays(calculateTimeToThreshold(data, 30, currentPosition))
+                    : "Current position not defined"}
             </p>
         </div>
     );

@@ -69,6 +69,17 @@ const EventList = () => {
                             minute: "2-digit",
                             second: "2-digit",
                         }),
+                        formattedrepair_date: event.repair_date && event.repair_date !== "1970-01-01T00:00:00.000Z"
+                            ? new Date(event.repair_date).toLocaleString("en-GB", {
+                                timeZone: "Asia/Bangkok",
+                                year: "numeric",
+                                month: "2-digit",
+                                day: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                            })
+                            : "", // แสดงเป็นค่าว่างถ้า repair_date เป็น null หรือค่า default
                     }))
                 );
             } catch (error) {
@@ -87,6 +98,8 @@ const EventList = () => {
         { field: "severity", headerName: "Severity", width: 150 },
         { field: "description", headerName: "Description", width: 300 },
         { field: "formattedTimestamp", headerName: "Date", width: 200 },
+        { field: "formattedrepair_date", headerName: "Repair Date", width: 200 },
+        { field: "repair_effectiveness", headerName: "Repair Effectiveness", width: 150 },
         {
           field: "actions",
           headerName: "Actions",

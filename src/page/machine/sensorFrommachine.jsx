@@ -222,19 +222,19 @@ const SensorForm = () => {
   //********************************************************************************************************************************
   const tempData = {
     labels: chartData
-      ? chartData.slice(-20).map((item) => new Date(item.timestamp).toLocaleString())
+      ? chartData.slice(-50).map((item) => new Date(item.timestamp).toLocaleString())
       : [],
     datasets: [
       {
         label: "Temperature",
-        data: chartData ? chartData.slice(-20).map((item) => item.temp) : [],
+        data: chartData ? chartData.slice(-50).map((item) => item.temp) : [],
         fill: false,
         backgroundColor: "rgb(75, 192, 192)",
         borderColor: "rgba(75, 192, 192, 0.2)",
       },
       {
         label: "Warning Temperature",
-        data: chartData ? chartData.slice(-20).map(() => sensorInfo.warning_temp) : [],
+        data: chartData ? chartData.slice(-50).map(() => sensorInfo.warning_temp) : [],
         fill: false,
         borderColor: "rgba(255, 165, 0, 0.5)",
         borderDash: [10, 5],
@@ -242,7 +242,7 @@ const SensorForm = () => {
       },
       {
         label: "Critical Temperature",
-        data: chartData ? chartData.slice(-20).map(() => sensorInfo.critical_temp) : [],
+        data: chartData ? chartData.slice(-50).map(() => sensorInfo.critical_temp) : [],
         fill: false,
         borderColor: "rgba(255, 0, 0, 0.5)",
         borderDash: [10, 5],
@@ -253,19 +253,19 @@ const SensorForm = () => {
   
   const vibrationXData = {
     labels: chartData
-      ? chartData.slice(-20).map((item) => new Date(item.timestamp).toLocaleString())
+      ? chartData.slice(-50).map((item) => new Date(item.timestamp).toLocaleString())
       : [],
     datasets: [
       {
         label: "Vibration X",
-        data: chartData ? chartData.slice(-20).map((item) => item.vibration_x) : [],
+        data: chartData ? chartData.slice(-50).map((item) => item.vibration_x) : [],
         fill: false,
         backgroundColor: "rgb(255, 99, 132)",
         borderColor: "rgba(255, 99, 132, 0.2)",
       },
       {
         label: "Warning Vibration X",
-        data: chartData ? chartData.slice(-20).map(() => sensorInfo.warning_vibration_x) : [],
+        data: chartData ? chartData.slice(-50).map(() => sensorInfo.warning_vibration_x) : [],
         fill: false,
         borderColor: "rgba(255, 165, 0, 0.5)",
         borderDash: [10, 5],
@@ -273,7 +273,7 @@ const SensorForm = () => {
       },
       {
         label: "Critical Vibration X",
-        data: chartData ? chartData.slice(-20).map(() => sensorInfo.critical_vibration_x) : [],
+        data: chartData ? chartData.slice(-50).map(() => sensorInfo.critical_vibration_x) : [],
         fill: false,
         borderColor: "rgba(255, 0, 0, 0.5)",
         borderDash: [10, 5],
@@ -284,19 +284,19 @@ const SensorForm = () => {
   
   const vibrationYData = {
     labels: chartData
-      ? chartData.slice(-20).map((item) => new Date(item.timestamp).toLocaleString())
+      ? chartData.slice(-50).map((item) => new Date(item.timestamp).toLocaleString())
       : [],
     datasets: [
       {
         label: "Vibration Y",
-        data: chartData ? chartData.slice(-20).map((item) => item.vibration_y) : [],
+        data: chartData ? chartData.slice(-50).map((item) => item.vibration_y) : [],
         fill: false,
         backgroundColor: "rgb(54, 162, 235)",
         borderColor: "rgba(54, 162, 235, 0.2)",
       },
       {
         label: "Warning Vibration Y",
-        data: chartData ? chartData.slice(-20).map(() => sensorInfo.warning_vibration_y) : [],
+        data: chartData ? chartData.slice(-50).map(() => sensorInfo.warning_vibration_y) : [],
         fill: false,
         borderColor: "rgba(255, 165, 0, 0.5)",
         borderDash: [10, 5],
@@ -304,7 +304,7 @@ const SensorForm = () => {
       },
       {
         label: "Critical Vibration Y",
-        data: chartData ? chartData.slice(-20).map(() => sensorInfo.critical_vibration_y) : [],
+        data: chartData ? chartData.slice(-50).map(() => sensorInfo.critical_vibration_y) : [],
         fill: false,
         borderColor: "rgba(255, 0, 0, 0.5)",
         borderDash: [10, 5],
@@ -315,19 +315,19 @@ const SensorForm = () => {
   
   const vibrationZData = {
     labels: chartData
-      ? chartData.slice(-20).map((item) => new Date(item.timestamp).toLocaleString())
+      ? chartData.slice(-50).map((item) => new Date(item.timestamp).toLocaleString())
       : [],
     datasets: [
       {
         label: "Vibration Z",
-        data: chartData ? chartData.slice(-20).map((item) => item.vibration_z) : [],
+        data: chartData ? chartData.slice(-50).map((item) => item.vibration_z) : [],
         fill: false,
         backgroundColor: "rgb(255, 206, 86)",
         borderColor: "rgba(255, 206, 86, 0.2)",
       },
       {
         label: "Warning Vibration Z",
-        data: chartData ? chartData.slice(-20).map(() => sensorInfo.warning_vibration_z) : [],
+        data: chartData ? chartData.slice(-50).map(() => sensorInfo.warning_vibration_z) : [],
         fill: false,
         borderColor: "rgba(255, 165, 0, 0.5)",
         borderDash: [10, 5],
@@ -335,7 +335,7 @@ const SensorForm = () => {
       },
       {
         label: "Critical Vibration Z",
-        data: chartData ? chartData.slice(-20).map(() => sensorInfo.critical_vibration_z) : [],
+        data: chartData ? chartData.slice(-50).map(() => sensorInfo.critical_vibration_z) : [],
         fill: false,
         borderColor: "rgba(255, 0, 0, 0.5)",
         borderDash: [10, 5],
