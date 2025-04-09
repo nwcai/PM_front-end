@@ -49,7 +49,7 @@ const EventForm = () => {
     const value = event.target.value;
 
     if (field === "severity" && (isNaN(value) || value < 1 || value > 10)) {
-        AlertError("ระดับความรุนแรงต้องเป็นตัวเลขระหว่าง 1 ถึง 10");
+        AlertError("ระดับความรุนแรงต้องเป็นตัวเลขระหว่าง 0 ถึง 10");
         return;
     }
 
@@ -70,7 +70,7 @@ const EventForm = () => {
     e.preventDefault();
 
     if (isNaN(eventData.severity) || eventData.severity < 1 || eventData.severity > 10) {
-        AlertError("ระดับความรุนแรงต้องเป็นตัวเลขระหว่าง 1 ถึง 10");
+        AlertError("ระดับความรุนแรงต้องเป็นตัวเลขระหว่าง 0 ถึง 10");
         return;
     }
 
@@ -130,7 +130,7 @@ const EventForm = () => {
                       required
                       value={eventData.severity}
                       onChange={handleChange("severity")}
-                      placeholder="ระดับความรุนแรง (1-10)"
+                      placeholder="ระดับความรุนแรง (0-10)"
                       size="small"
                       className="bg-white"
                       inputProps={{ min: 1, max: 10, type: "number" }} // จำกัดค่าให้อยู่ในช่วง 0-10
