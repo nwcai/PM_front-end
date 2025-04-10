@@ -16,7 +16,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<AnimatedGridLogin />} />
-        <Route path="/" element={<FileUploadForm />} />
+        {/* <Route path="/" element={<FileUploadForm />} /> */}
 
         {/* Employee Routes */}
         <Route path="/employee/create" element={<EmployeeForm />} />
